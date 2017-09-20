@@ -42,6 +42,6 @@ public class KafkaUtil {
      * @return kafka 中对应的 topic 名称
      */
     public static String getTopicName(Class<?> messageClass) {
-        return messageClass.getSimpleName();
+        return messageClass.getName();
     }
 }
