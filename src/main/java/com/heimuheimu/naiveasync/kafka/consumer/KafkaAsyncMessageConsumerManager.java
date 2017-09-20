@@ -48,9 +48,11 @@ import java.util.*;
  */
 public class KafkaAsyncMessageConsumerManager implements Closeable {
 
-    private final static Logger CONSUMER_INFO_LOG = LoggerFactory.getLogger("NAIVE_ASYNC_CONSUMER_INFO_LOG");
+    private final static Logger LOGGER = LoggerFactory.getLogger(KafkaAsyncMessageConsumerManager.class);
 
-    private final static Logger CONSUMER_ERROR_LOG = LoggerFactory.getLogger("NAIVE_ASYNC_CONSUMER_ERROR_LOG");
+    private final static Logger CONSUMER_INFO_LOGGER = LoggerFactory.getLogger("NAIVE_ASYNC_CONSUMER_INFO_LOG");
+
+    private final static Logger CONSUMER_ERROR_LOGGER = LoggerFactory.getLogger("NAIVE_ASYNC_CONSUMER_ERROR_LOG");
 
     private final Map<String, AsyncMessageConsumer<?>> consumerMap;
 
@@ -73,8 +75,10 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
     public KafkaAsyncMessageConsumerManager(List<AsyncMessageConsumer<?>> consumers, KafkaConsumerConfig config,
                                             KafkaConsumerListener listener, int poolSize) throws IllegalArgumentException {
         if (consumers == null || consumers.isEmpty()) {
-            throw new IllegalArgumentException("Consumers could not be null or empty. Consumers: `" + consumers + "`. Config: `"
-                + config + "`. Listener: `" + listener + "`. Pool size: `" + poolSize + "`.");
+            LOGGER.error("Create KafkaAsyncMessageConsumerManager failed. Consumers could not be null or empty. Consumers: `"
+                    + consumers + "`. Config: `" + config + "`. Listener: `" + listener + "`. Pool size: `" + poolSize + "`.");
+            throw new IllegalArgumentException("Create KafkaAsyncMessageConsumerManager failed. Consumers could not be null or empty. Consumers: `"
+                    + consumers + "`. Config: `" + config + "`. Listener: `" + listener + "`. Pool size: `" + poolSize + "`.");
         }
         this.consumerMap = new HashMap<>();
         this.topicList = new ArrayList<>();
@@ -101,7 +105,7 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
                 consumeThreadList.add(consumeThread);
             }
             state = BeanStatusEnum.NORMAL;
-            CONSUMER_INFO_LOG.info("KafkaAsyncMessageConsumerManager has been initialized. Cost: `{} ms`. Config: `{}`."
+            CONSUMER_INFO_LOGGER.info("KafkaAsyncMessageConsumerManager has been initialized. Cost: `{} ms`. Config: `{}`."
                     + " Pool size: `{}`. Topics: `{}`. Listener: `{}`.", (System.currentTimeMillis() - startTime),
                     config, poolSize, topicList, listener);
         }
@@ -115,7 +119,7 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
             for (KafkaConsumeThread consumeThread : consumeThreadList) {
                 consumeThread.close();
             }
-            CONSUMER_INFO_LOG.info("KafkaAsyncMessageConsumerManager has been stopped. Cost: `{} ms`. Config: `{}`."
+            CONSUMER_INFO_LOGGER.info("KafkaAsyncMessageConsumerManager has been stopped. Cost: `{} ms`. Config: `{}`."
                     + " Pool size: `{}`. Topics: `{}`. Listener: `{}`.", (System.currentTimeMillis() - startTime),
                     config, poolSize, topicList, listener);
         }
@@ -135,13 +139,13 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
 
                 @Override
                 public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-                    CONSUMER_INFO_LOG.info("[Rebalance] Revoked partitions: `{}`. Thread: `{}`. Config: `{}`.",
+                    CONSUMER_INFO_LOGGER.info("[Rebalance] Revoked partitions: `{}`. Thread: `{}`. Config: `{}`.",
                             partitions, getName(), config);
                 }
 
                 @Override
                 public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
-                    CONSUMER_INFO_LOG.info("[Rebalance] Assigned partitions: `{}`. Thread: `{}`. Config: `{}`.",
+                    CONSUMER_INFO_LOGGER.info("[Rebalance] Assigned partitions: `{}`. Thread: `{}`. Config: `{}`.",
                             partitions, getName(), config);
                 }
             });
@@ -151,7 +155,7 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
         @SuppressWarnings("unchecked")
         public void run() {
             try {
-                CONSUMER_INFO_LOG.info("Kafka consumer thread has been started. Assigned partitions: `{}`. Thread: `{}`. Config: `{}`.",
+                CONSUMER_INFO_LOGGER.info("Kafka consumer thread has been started. Assigned partitions: `{}`. Thread: `{}`. Config: `{}`.",
                         consumer.assignment(), getName(), config);
                 ConsumerRecords<byte[], byte[]> records;
                 Queue<Map<TopicPartition, OffsetAndMetadata>> kafkaOffsetQueue = new LinkedList<>();
@@ -174,7 +178,7 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
                     } catch (InterruptException ignored) {
                         //do nothing
                     } catch (Exception e) {
-                        CONSUMER_ERROR_LOG.error("Poll message failed: `" + e.getMessage() + "`. Assigned partitions: `" + consumer.assignment() +
+                        CONSUMER_ERROR_LOGGER.error("Poll message failed: `" + e.getMessage() + "`. Assigned partitions: `" + consumer.assignment() +
                                 "`. Thread: `" + getName() + "`. Config: `" + config + "`.", e);
                         monitor.onErrorExecution();
                         isPollFailed = true;
@@ -192,7 +196,7 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
                                 try {
                                     messageList.add(transcoder.decode(record.value()));
                                 } catch (TranscoderException e) {
-                                    CONSUMER_ERROR_LOG.error("Decode message failed. This partition will be paused. Partition: `" + partition  + "`. Thread: `" + getName()
+                                    CONSUMER_ERROR_LOGGER.error("Decode message failed. This partition will be paused. Partition: `" + partition  + "`. Thread: `" + getName()
                                             + "`. Config: `" + config + "`.", e);
                                     monitor.onErrorExecution();
                                     listener.onDecodeMessageFailed(topicName);
@@ -208,7 +212,7 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
                                         asyncMessageConsumer.consume(messageList);
                                         monitor.onSuccessConsumed(topicName, messageList.size());
                                     } catch (Exception e) { //should not happen
-                                        CONSUMER_ERROR_LOG.error("Consume messages failed. This partition will be paused. Messages will not be polled again. Consumer should not throw any exception. Partition: `"
+                                        CONSUMER_ERROR_LOGGER.error("Consume messages failed. This partition will be paused. Messages will not be polled again. Consumer should not throw any exception. Partition: `"
                                                 + partition + "`. Thread: `" + getName()  + "`. Config: `" + config + "`. Messages: `" + messageList + "`.", e);
                                         monitor.onErrorExecution();
                                         listener.onConsumeFailed(topicName);
@@ -218,7 +222,7 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
                                     Map<TopicPartition, OffsetAndMetadata> kafkaOffset = Collections.singletonMap(partition, new OffsetAndMetadata(lastOffset + 1));
                                     commitSync(kafkaOffset, kafkaOffsetQueue);
                                 } else {
-                                    CONSUMER_ERROR_LOG.error("There is no consumer for topic `" + topicName + "`. Thread: `" + getName()
+                                    CONSUMER_ERROR_LOGGER.error("There is no consumer for topic `" + topicName + "`. Thread: `" + getName()
                                             + "`. Config: `" + config + "`. Messages: `" + messageList + "`.");
                                     monitor.onErrorExecution();
                                     listener.onUnrecognizedMessage(topicName);
@@ -228,14 +232,14 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
                     }
                 }
             } catch (Exception e) {//should not happen
-                CONSUMER_ERROR_LOG.error("Unexpected error. Thread: `" + getName() + "`. Config: `" + config + "`.", e);
+                CONSUMER_ERROR_LOGGER.error("Unexpected error. Thread: `" + getName() + "`. Config: `" + config + "`.", e);
             } finally {
                 try {
                     consumer.close();
                 } catch (Exception e) {
-                    CONSUMER_ERROR_LOG.error("Consumer closed failed. Thread: `" + getName() + "`. Config: `" + config + "`.", e);
+                    CONSUMER_ERROR_LOGGER.error("Consumer closed failed. Thread: `" + getName() + "`. Config: `" + config + "`.", e);
                 }
-                CONSUMER_INFO_LOG.info("Kafka consumer thread has been stopped. Thread: `{}`. Config: `{}`.", getName(), config);
+                CONSUMER_INFO_LOGGER.info("Kafka consumer thread has been stopped. Thread: `{}`. Config: `{}`.", getName(), config);
             }
         }
 
@@ -243,7 +247,7 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
             try {
                 consumer.commitSync(offset);
             } catch (Exception e) {
-                CONSUMER_ERROR_LOG.error("Commit sync failed. Offset: `" + offset + "`. Thread: `" + getName() + "`. Config: `"
+                CONSUMER_ERROR_LOGGER.error("Commit sync failed. Offset: `" + offset + "`. Thread: `" + getName() + "`. Config: `"
                         + config + "`.", e);
                 monitor.onErrorExecution();
                 kafkaOffsetQueue.offer(offset);
@@ -258,7 +262,7 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
             try {
                 consumer.pause(Collections.singletonList(partition));
             } catch (Exception e) {
-                CONSUMER_ERROR_LOG.error("Pause partition failed. Partition: `" + partition + "`. Thread: `" + getName()
+                CONSUMER_ERROR_LOGGER.error("Pause partition failed. Partition: `" + partition + "`. Thread: `" + getName()
                         + "`. Config: `" + config + "`.", e);
             }
         }
@@ -283,7 +287,7 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
                 try {
                     listener.onPollFailed(subscribedTopics);
                 } catch (Exception e) {
-                    CONSUMER_ERROR_LOG.error("Call KafkaConsumerListener#onPollFailed() failed. Topics: `" + subscribedTopics
+                    CONSUMER_ERROR_LOGGER.error("Call KafkaConsumerListener#onPollFailed() failed. Topics: `" + subscribedTopics
                             + "`. Config: `" + config + "`.", e);
                 }
             }
@@ -295,7 +299,7 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
                 try {
                     listener.onPollRecovered(subscribedTopics);
                 } catch (Exception e) {
-                    CONSUMER_ERROR_LOG.error("Call KafkaConsumerListener#onPollRecovered() failed. Topics: `" + subscribedTopics
+                    CONSUMER_ERROR_LOGGER.error("Call KafkaConsumerListener#onPollRecovered() failed. Topics: `" + subscribedTopics
                             + "`. Config: `" + config + "`.", e);
                 }
             }
@@ -307,7 +311,7 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
                 try {
                     listener.onDecodeMessageFailed(topic);
                 } catch (Exception e) {
-                    CONSUMER_ERROR_LOG.error("Call KafkaConsumerListener#onDecodeMessageFailed() failed. Topic: `" + topic
+                    CONSUMER_ERROR_LOGGER.error("Call KafkaConsumerListener#onDecodeMessageFailed() failed. Topic: `" + topic
                             + "`. Config: `" + config + "`.", e);
                 }
             }
@@ -319,7 +323,7 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
                 try {
                     listener.onConsumeFailed(topic);
                 } catch (Exception e) {
-                    CONSUMER_ERROR_LOG.error("Call KafkaConsumerListener#onConsumeFailed() failed. Topic: `" + topic
+                    CONSUMER_ERROR_LOGGER.error("Call KafkaConsumerListener#onConsumeFailed() failed. Topic: `" + topic
                             + "`. Config: `" + config + "`.", e);
                 }
             }
@@ -331,7 +335,7 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
                 try {
                     listener.onUnrecognizedMessage(topic);
                 } catch (Exception e) {
-                    CONSUMER_ERROR_LOG.error("Call KafkaConsumerListener#onUnrecognizedMessage() failed. Topic: `" + topic
+                    CONSUMER_ERROR_LOGGER.error("Call KafkaConsumerListener#onUnrecognizedMessage() failed. Topic: `" + topic
                             + "`. Config: `" + config + "`.", e);
                 }
             }
@@ -343,7 +347,7 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
                 try {
                     listener.onCommitSyncFailed(subscribedTopics);
                 } catch (Exception e) {
-                    CONSUMER_ERROR_LOG.error("Call KafkaConsumerListener#onCommitSyncFailed() failed. Topics: `" + subscribedTopics
+                    CONSUMER_ERROR_LOGGER.error("Call KafkaConsumerListener#onCommitSyncFailed() failed. Topics: `" + subscribedTopics
                             + "`. Config: `" + config + "`.", e);
                 }
             }
@@ -355,7 +359,7 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
                 try {
                     listener.onCommitSyncRecovered(subscribedTopics);
                 } catch (Exception e) {
-                    CONSUMER_ERROR_LOG.error("Call KafkaConsumerListener#onCommitSyncRecovered() failed. Topics: `" + subscribedTopics
+                    CONSUMER_ERROR_LOGGER.error("Call KafkaConsumerListener#onCommitSyncRecovered() failed. Topics: `" + subscribedTopics
                             + "`. Config: `" + config + "`.", e);
                 }
             }

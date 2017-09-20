@@ -24,6 +24,9 @@
 
 package com.heimuheimu.naiveasync.transcoder;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -37,6 +40,8 @@ import java.util.Arrays;
  */
 public class SimpleMessageTranscoder implements MessageTranscoder {
 
+    private final static Logger LOGGER = LoggerFactory.getLogger(SimpleMessageTranscoder.class);
+
     @Override
     public byte[] encode(Object message) throws TranscoderException {
         try {
@@ -45,6 +50,7 @@ public class SimpleMessageTranscoder implements MessageTranscoder {
             oos.writeObject(message);
             return bos.toByteArray();
         } catch (Exception e) {
+            LOGGER.error("Encode message failed: `" + e.getMessage() + "`. Message: `" + message + "`.", e);
             throw new TranscoderException("Encode message failed: `" + e.getMessage() + "`. Message: `" + message + "`.", e);
         }
     }
@@ -57,8 +63,8 @@ public class SimpleMessageTranscoder implements MessageTranscoder {
             ObjectInputStream ois = new ObjectInputStream(valueBis);
             return (T) ois.readObject();
         } catch (Exception e) {
+            LOGGER.error("Decode message failed: `" + e.getMessage() + "`. Src: `" + Arrays.toString(src) + "`.", e);
             throw new TranscoderException("Decode message failed: `" + e.getMessage() + "`. Src: `" + Arrays.toString(src) + "`.", e);
         }
-
     }
 }
