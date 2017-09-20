@@ -28,6 +28,7 @@ import java.util.List;
 
 /**
  * 异步消息消费者，仅支持同一类型的消息
+ * <p>注意：实现类必须是线程安全的</p>
  *
  * @author heimuheimu
  */

@@ -26,6 +26,7 @@ package com.heimuheimu.naiveasync.producer;
 
 /**
  * 异步消息生产者
+ * <p>注意：实现类必须是线程安全的</p>
  *
  * @author heimuheimu
  */
