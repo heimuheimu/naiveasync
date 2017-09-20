@@ -22,31 +22,18 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.async.transcoder;
+package com.heimuheimu.naiveasync.transcoder;
 
 /**
- * 异步消息转换器
+ * 如果异步消息转换过程中发生错误，将抛出此异常信息
  *
  * @author heimuheimu
  */
-public interface MessageTranscoder {
+public class TranscoderException extends RuntimeException {
 
-    /**
-     * 将 Java 对象编码成字节数组
-     *
-     * @param message Java 对象
-     * @return 编码后的字节数组
-     * @throws TranscoderException 如果编码过程中发生错误，则抛出此异常
-     */
-    byte[] encode(Object message) throws TranscoderException;
+    private static final long serialVersionUID = 7971783118377431358L;
 
-    /**
-     * 将字节数组还原成 Java 对象并返回
-     *
-     * @param src 需要解码的字节数组
-     * @return Java 对象
-     * @throws TranscoderException 如果解码过程中发生错误，则抛出此异常
-     */
-    <T> T decode(byte[] src) throws TranscoderException;
-
+    public TranscoderException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

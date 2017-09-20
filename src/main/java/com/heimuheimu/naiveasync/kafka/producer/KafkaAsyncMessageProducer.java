@@ -22,14 +22,14 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.async.kafka.producer;
+package com.heimuheimu.naiveasync.kafka.producer;
 
-import com.heimuheimu.async.kafka.KafkaUtil;
-import com.heimuheimu.async.monitor.producer.AsyncMessageProducerMonitor;
-import com.heimuheimu.async.monitor.producer.AsyncMessageProducerMonitorFactory;
-import com.heimuheimu.async.producer.AsyncMessageProducer;
-import com.heimuheimu.async.transcoder.MessageTranscoder;
-import com.heimuheimu.async.transcoder.SimpleMessageTranscoder;
+import com.heimuheimu.naiveasync.kafka.KafkaUtil;
+import com.heimuheimu.naiveasync.monitor.producer.AsyncMessageProducerMonitor;
+import com.heimuheimu.naiveasync.monitor.producer.AsyncMessageProducerMonitorFactory;
+import com.heimuheimu.naiveasync.producer.AsyncMessageProducer;
+import com.heimuheimu.naiveasync.transcoder.MessageTranscoder;
+import com.heimuheimu.naiveasync.transcoder.SimpleMessageTranscoder;
 import org.apache.kafka.clients.producer.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -22,27 +22,28 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.async.monitor.producer;
+package com.heimuheimu.naiveasync;
 
 /**
- * 异步消息生产者监控器工厂
+ * Bean状态枚举类
  *
  * @author heimuheimu
  */
-public class AsyncMessageProducerMonitorFactory {
-
-    private static final AsyncMessageProducerMonitor MONITOR = new AsyncMessageProducerMonitor();
-
-    private AsyncMessageProducerMonitorFactory() {
-        //prevent construct this class
-    }
+public enum BeanStatusEnum {
 
     /**
-     * 获得异步消息生产者监控器
-     *
-     * @return 异步消息生产者监控器
+     * 尚未初始化
      */
-    public static AsyncMessageProducerMonitor get() {
-        return MONITOR;
-    }
+    UNINITIALIZED,
+
+    /**
+     * 正常
+     */
+    NORMAL,
+
+    /**
+     * 已关闭
+     */
+    CLOSED
+
 }

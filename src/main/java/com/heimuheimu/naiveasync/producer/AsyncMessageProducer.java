@@ -22,18 +22,20 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.async.transcoder;
+package com.heimuheimu.naiveasync.producer;
 
 /**
- * 如果异步消息转换过程中发生错误，将抛出此异常信息
+ * 异步消息生产者
  *
  * @author heimuheimu
  */
-public class TranscoderException extends RuntimeException {
+public interface AsyncMessageProducer {
 
-    private static final long serialVersionUID = 7971783118377431358L;
+    /**
+     * 将该消息发送至 MQ 中，该方法不会返回任何异常。如果传入的消息为 {@code null}，则不执行任何操作。
+     *
+     * @param message 异步消息，不允许为 {@code null}
+     */
+    <T> void send(T message);
 
-    public TranscoderException(String message, Throwable cause) {
-        super(message, cause);
-    }
 }

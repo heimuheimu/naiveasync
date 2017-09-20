@@ -22,20 +22,27 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.async.producer;
+package com.heimuheimu.naiveasync.monitor.consumer;
 
 /**
- * 异步消息生产者
+ * 异步消息消费者监控器工厂
  *
  * @author heimuheimu
  */
-public interface AsyncMessageProducer {
+public class AsyncMessageConsumerMonitorFactory {
+
+    private static final AsyncMessageConsumerMonitor MONITOR = new AsyncMessageConsumerMonitor();
+
+    private AsyncMessageConsumerMonitorFactory() {
+        //prevent construct this class
+    }
 
     /**
-     * 将该消息发送至 MQ 中，该方法不会返回任何异常。如果传入的消息为 {@code null}，则不执行任何操作。
+     * 获得异步消息消费者监控器
      *
-     * @param message 异步消息，不允许为 {@code null}
+     * @return 异步消息消费者监控器
      */
-    <T> void send(T message);
-
+    public static AsyncMessageConsumerMonitor get() {
+        return MONITOR;
+    }
 }

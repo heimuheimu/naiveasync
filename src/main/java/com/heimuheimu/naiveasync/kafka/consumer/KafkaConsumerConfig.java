@@ -22,24 +22,29 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.async.kafka.producer;
+package com.heimuheimu.naiveasync.kafka.consumer;
 
-import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Kafka 生产者配置信息，更多内容可参考文档：<a href="http://kafka.apache.org/documentation/#producerconfigs">http://kafka.apache.org/documentation/#producerconfigs</a>
+ * Kafka 消费者配置信息，更多内容可参考文档：<a href="http://kafka.apache.org/documentation/#newconsumerconfigs">http://kafka.apache.org/documentation/#newconsumerconfigs</a>
  *
  * @author heimuheimu
  */
-public class KafkaProducerConfig {
+public class KafkaConsumerConfig {
 
     /**
      * Kafka 集群启动地址，例如：host1:port1,host2:port2,...
      */
     private String bootstrapServers = "";
+
+    /**
+     * Kafka 消费者组 ID
+     */
+    private String groupId = "";
 
     /**
      * 获得 Kafka 集群启动地址，例如：host1:port1,host2:port2,...
@@ -60,26 +65,54 @@ public class KafkaProducerConfig {
     }
 
     /**
-     * 根据当前配置信息返回一个用于构造 {@link org.apache.kafka.clients.producer.Producer} 实例的配置信息 Map
+     * 获得 Kafka 消费者组 ID
+     *
+     * @return Kafka 消费者组 ID
+     */
+    public String getGroupId() {
+        return groupId;
+    }
+
+    /**
+     * 设置 Kafka 消费者组 ID
+     *
+     * @param groupId Kafka 消费者组 ID
+     */
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
+    }
+
+    /**
+     * 根据当前配置信息返回一个用于构造 {@link org.apache.kafka.clients.consumer.KafkaConsumer} 实例的配置信息 Map
      *
      * @return Kafka 配置信息 Map
      */
     public Map<String, Object> toConfigMap() {
         HashMap<String, Object> configMap = new HashMap<>();
         configMap.put("bootstrap.servers", bootstrapServers);
-        configMap.put("key.serializer", ByteArraySerializer.class);
-        configMap.put("value.serializer", ByteArraySerializer.class);
-        configMap.put("acks", "1"); // Leader 写入即返回
-        configMap.put("buffer.memory", "33554432"); // 消息可缓存空间 32 MB
-        configMap.put("compression.type", "none");
-        configMap.put("max.block.ms", "60000"); //最大阻塞时间 60 秒
+        configMap.put("key.deserializer", ByteArrayDeserializer.class);
+        configMap.put("value.deserializer", ByteArrayDeserializer.class);
+        configMap.put("fetch.min.bytes", 1);
+        configMap.put("group.id", groupId);
+        configMap.put("heartbeat.interval.ms", 3000); // 3 秒
+        configMap.put("max.partition.fetch.bytes", 1048576);//每个分区最大获取字节数：1 MB
+        configMap.put("session.timeout.ms", 10000); // 10 秒
+        configMap.put("auto.offset.reset", "latest");
+        configMap.put("connections.max.idle.ms", 540000L); //8 分钟
+        configMap.put("enable.auto.commit", false);
+        configMap.put("exclude.internal.topics", true);
+        configMap.put("fetch.max.bytes", 52428800); //可获取的最大字节数：50 MB
+        configMap.put("isolation.level", "read_uncommitted");
+        configMap.put("max.poll.interval.ms", 300000); //5 分钟
+        configMap.put("max.poll.records", 500); //单次 poll 操作返回的最大消息数量：500
         return configMap;
     }
 
     @Override
     public String toString() {
-        return "KafkaProducerConfig{" +
+        return "KafkaConsumerConfig{" +
                 "bootstrapServers='" + bootstrapServers + '\'' +
+                ", groupId='" + groupId + '\'' +
                 '}';
     }
 }

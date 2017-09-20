@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.async.kafka.consumer;
+package com.heimuheimu.naiveasync.kafka.consumer;
 
 import java.util.List;
 
@@ -56,7 +56,7 @@ public interface KafkaConsumerListener {
 
     /**
      * 当消息消费操作发生异常时，将触发此事件
-     * <p>注意：消费者不应抛出任何异常，此事件被触发时通常意味着程序 BUG，消费操作定义：{@link com.heimuheimu.async.consumer.AsyncMessageConsumer#consume(List)}</p>
+     * <p>注意：消费者不应抛出任何异常，此事件被触发时通常意味着程序 BUG，消费操作定义：{@link com.heimuheimu.naiveasync.consumer.AsyncMessageConsumer#consume(List)}</p>
      *
      * @param topic 消息所在 topic 名称
      */

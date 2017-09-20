@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.async.transcoder;
+package com.heimuheimu.naiveasync.transcoder;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

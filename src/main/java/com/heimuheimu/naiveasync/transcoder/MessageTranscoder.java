@@ -22,30 +22,31 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.async.consumer;
-
-import java.util.List;
+package com.heimuheimu.naiveasync.transcoder;
 
 /**
- * 异步消息消费者，仅支持同一类型的消息
+ * 异步消息转换器
  *
  * @author heimuheimu
  */
-public interface AsyncMessageConsumer<T> {
+public interface MessageTranscoder {
 
     /**
-     * 获得当前消费者支持的消息类型
+     * 将 Java 对象编码成字节数组
      *
-     * @return 获得当前消费者支持的消息类型
+     * @param message Java 对象
+     * @return 编码后的字节数组
+     * @throws TranscoderException 如果编码过程中发生错误，则抛出此异常
      */
-    Class<T> getMessageClass();
+    byte[] encode(Object message) throws TranscoderException;
 
     /**
-     * 从 MQ 中消费异步消息列表，该方法不允许抛出异常
-     * <p>注意：消费者需自行处理消费失败的情况，已消费过的消息列表不会被重复消费
+     * 将字节数组还原成 Java 对象并返回
      *
-     * @param messageList 异步消息列表，不会为 {@code null}
+     * @param src 需要解码的字节数组
+     * @return Java 对象
+     * @throws TranscoderException 如果解码过程中发生错误，则抛出此异常
      */
-    void consume(List<T> messageList);
+    <T> T decode(byte[] src) throws TranscoderException;
 
 }

@@ -22,27 +22,26 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.async.monitor.consumer;
+package com.heimuheimu.naiveasync.kafka;
 
 /**
- * 异步消息消费者监控器工厂
+ * Kafka 工具类
  *
  * @author heimuheimu
  */
-public class AsyncMessageConsumerMonitorFactory {
+public class KafkaUtil {
 
-    private static final AsyncMessageConsumerMonitor MONITOR = new AsyncMessageConsumerMonitor();
-
-    private AsyncMessageConsumerMonitorFactory() {
+    private KafkaUtil() {
         //prevent construct this class
     }
 
     /**
-     * 获得异步消息消费者监控器
+     * 根据异步消息 Class 对象获得 kafka 中对应的 topic 名称
      *
-     * @return 异步消息消费者监控器
+     * @param messageClass 异步消息 Class 对象
+     * @return kafka 中对应的 topic 名称
      */
-    public static AsyncMessageConsumerMonitor get() {
-        return MONITOR;
+    public static String getTopicName(Class<?> messageClass) {
+        return messageClass.getSimpleName();
     }
 }

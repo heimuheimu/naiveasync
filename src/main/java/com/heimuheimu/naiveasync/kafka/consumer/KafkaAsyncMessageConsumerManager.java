@@ -22,16 +22,16 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.async.kafka.consumer;
+package com.heimuheimu.naiveasync.kafka.consumer;
 
-import com.heimuheimu.async.BeanStatusEnum;
-import com.heimuheimu.async.consumer.AsyncMessageConsumer;
-import com.heimuheimu.async.kafka.KafkaUtil;
-import com.heimuheimu.async.monitor.consumer.AsyncMessageConsumerMonitor;
-import com.heimuheimu.async.monitor.consumer.AsyncMessageConsumerMonitorFactory;
-import com.heimuheimu.async.transcoder.MessageTranscoder;
-import com.heimuheimu.async.transcoder.SimpleMessageTranscoder;
-import com.heimuheimu.async.transcoder.TranscoderException;
+import com.heimuheimu.naiveasync.BeanStatusEnum;
+import com.heimuheimu.naiveasync.consumer.AsyncMessageConsumer;
+import com.heimuheimu.naiveasync.kafka.KafkaUtil;
+import com.heimuheimu.naiveasync.monitor.consumer.AsyncMessageConsumerMonitor;
+import com.heimuheimu.naiveasync.monitor.consumer.AsyncMessageConsumerMonitorFactory;
+import com.heimuheimu.naiveasync.transcoder.MessageTranscoder;
+import com.heimuheimu.naiveasync.transcoder.SimpleMessageTranscoder;
+import com.heimuheimu.naiveasync.transcoder.TranscoderException;
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.InterruptException;

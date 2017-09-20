@@ -22,28 +22,30 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.async;
+package com.heimuheimu.naiveasync.consumer;
+
+import java.util.List;
 
 /**
- * Bean状态枚举类
+ * 异步消息消费者，仅支持同一类型的消息
  *
  * @author heimuheimu
  */
-public enum BeanStatusEnum {
+public interface AsyncMessageConsumer<T> {
 
     /**
-     * 尚未初始化
+     * 获得当前消费者支持的消息类型
+     *
+     * @return 获得当前消费者支持的消息类型
      */
-    UNINITIALIZED,
+    Class<T> getMessageClass();
 
     /**
-     * 正常
+     * 从 MQ 中消费异步消息列表，该方法不允许抛出异常
+     * <p>注意：消费者需自行处理消费失败的情况，已消费过的消息列表不会被重复消费
+     *
+     * @param messageList 异步消息列表，不会为 {@code null}
      */
-    NORMAL,
-
-    /**
-     * 已关闭
-     */
-    CLOSED
+    void consume(List<T> messageList);
 
 }
