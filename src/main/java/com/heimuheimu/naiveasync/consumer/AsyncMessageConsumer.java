@@ -37,7 +37,7 @@ public interface AsyncMessageConsumer<T> {
     /**
      * 获得当前消费者支持的消息类型
      *
-     * @return 获得当前消费者支持的消息类型
+     * @return 当前消费者支持的消息类型
      */
     Class<T> getMessageClass();
 

@@ -100,7 +100,7 @@ public class KafkaAsyncMessageConsumerManager implements Closeable {
         if (state == BeanStatusEnum.UNINITIALIZED) {
             for (int i = 0; i < poolSize; i++) {
                 KafkaConsumeThread consumeThread = new KafkaConsumeThread();
-                consumeThread.setName("kafka-consumer-" + i);
+                consumeThread.setName("naiveasync-kafka-consumer-" + i);
                 consumeThread.start();
                 consumeThreadList.add(consumeThread);
             }
