@@ -24,5 +24,7 @@
 
 /**
  * 提供基于 Kafka 框架实现的异步消息生产者。
+ *
+ * @author heimuheimu
  */
 package com.heimuheimu.naiveasync.kafka.producer;
