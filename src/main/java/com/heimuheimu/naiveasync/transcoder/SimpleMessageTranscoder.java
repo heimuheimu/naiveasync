@@ -34,7 +34,9 @@ import java.io.ObjectOutputStream;
 import java.util.Arrays;
 
 /**
- * 基于 Java 序列化方式实现的异步消息转换器
+ * 基于 Java 序列化方式实现的消息与字节数组转换器。
+ *
+ * <p><strong>说明：</strong>{@code SimpleMessageTranscoder} 类是线程安全的，可在多个线程中使用同一个实例。</p>
  *
  * @author heimuheimu
  */

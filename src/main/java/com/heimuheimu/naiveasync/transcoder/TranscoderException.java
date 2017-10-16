@@ -25,9 +25,10 @@
 package com.heimuheimu.naiveasync.transcoder;
 
 /**
- * 如果异步消息转换过程中发生错误，将抛出此异常信息
+ * 如果消息与字节数组转换过程中发生错误，将抛出此异常信息。
  *
  * @author heimuheimu
+ * @see MessageTranscoder
  */
 public class TranscoderException extends RuntimeException {
 

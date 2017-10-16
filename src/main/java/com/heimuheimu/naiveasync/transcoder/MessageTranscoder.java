@@ -25,28 +25,30 @@
 package com.heimuheimu.naiveasync.transcoder;
 
 /**
- * 异步消息转换器
+ * 消息与字节数组转换器。
+ *
+ * <p><strong>说明：</strong>实现类必须是线程安全的。</p>
  *
  * @author heimuheimu
  */
 public interface MessageTranscoder {
 
     /**
-     * 将 Java 对象编码成字节数组
+     * 将消息编码成字节数组。
      *
-     * @param message Java 对象
+     * @param message 消息
      * @return 编码后的字节数组
      * @throws TranscoderException 如果编码过程中发生错误，则抛出此异常
      */
     byte[] encode(Object message) throws TranscoderException;
 
     /**
-     * 将字节数组还原成 Java 对象并返回
+     * 将字节数组还原成消息。
      *
      * @param src 需要解码的字节数组
-     * @return Java 对象
+     * @param <T> 消息类型
+     * @return 消息
      * @throws TranscoderException 如果解码过程中发生错误，则抛出此异常
      */
     <T> T decode(byte[] src) throws TranscoderException;
-
 }
