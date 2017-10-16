@@ -25,18 +25,20 @@
 package com.heimuheimu.naiveasync.producer;
 
 /**
- * 异步消息生产者
- * <p>注意：实现类必须是线程安全的</p>
+ * 异步消息生产者。
+ *
+ * <p><strong>说明：</strong>实现类必须是线程安全的。</p>
  *
  * @author heimuheimu
  */
 public interface AsyncMessageProducer {
 
+
     /**
-     * 将该消息发送至 MQ 中，该方法不会返回任何异常。如果传入的消息为 {@code null}，则不执行任何操作。
+     * 将该消息发送至消息队列，供消费者异步进行消费，该方法不会返回任何异常，如果传入的消息为 {@code null}，则不执行任何操作。
      *
-     * @param message 异步消息，不允许为 {@code null}
+     * @param message 发送的消息
+     * @param <T> 消息类型
      */
     <T> void send(T message);
-
 }
