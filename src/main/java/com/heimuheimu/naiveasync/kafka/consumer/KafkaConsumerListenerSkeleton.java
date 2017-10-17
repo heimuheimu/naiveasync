@@ -22,26 +22,46 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.naiveasync.kafka;
+package com.heimuheimu.naiveasync.kafka.consumer;
+
+import org.apache.kafka.common.TopicPartition;
 
 /**
- * Kafka 工具类。
+ * Kafka 消费者事件监听器骨架类，可防止 {@link KafkaConsumerListener} 在后续版本增加监听事件时，带来的编译错误。
+ *
+ * <p><strong>说明：</strong>监听器的实现类必须是线程安全的。</p>
  *
  * @author heimuheimu
  */
-public class KafkaUtil {
+public abstract class KafkaConsumerListenerSkeleton implements KafkaConsumerListener {
 
-    private KafkaUtil() {
-        //prevent construct this class
+    @Override
+    public void onPollFailed(String bootstrapServers) {
+        //do nothing
     }
 
-    /**
-     * 根据异步消息 {@code Class} 对象获得 Kafka 中对应的 topic 名称
-     *
-     * @param messageClass 异步消息 {@code Class} 对象
-     * @return Kafka 中对应的 topic 名称
-     */
-    public static String getTopicName(Class<?> messageClass) {
-        return messageClass.getName();
+    @Override
+    public void onPollRecovered(String bootstrapServers) {
+        //do nothing
+    }
+
+    @Override
+    public void onConsumeFailed(TopicPartition partition, Object message, String bootstrapServers) {
+        //do nothing
+    }
+
+    @Override
+    public void onCommitSyncFailed(TopicPartition partition, String bootstrapServers) {
+        //do nothing
+    }
+
+    @Override
+    public void onCommitSyncRecovered(TopicPartition partition, String bootstrapServers) {
+        //do nothing
+    }
+
+    @Override
+    public void onPartitionPaused(TopicPartition partition, String bootstrapServers) {
+        //do nothing
     }
 }

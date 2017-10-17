@@ -22,26 +22,9 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.naiveasync.kafka;
-
 /**
- * Kafka 工具类。
+ * 提供基于 Kafka 框架实现的异步消息消费管理者。
  *
  * @author heimuheimu
  */
-public class KafkaUtil {
-
-    private KafkaUtil() {
-        //prevent construct this class
-    }
-
-    /**
-     * 根据异步消息 {@code Class} 对象获得 Kafka 中对应的 topic 名称
-     *
-     * @param messageClass 异步消息 {@code Class} 对象
-     * @return Kafka 中对应的 topic 名称
-     */
-    public static String getTopicName(Class<?> messageClass) {
-        return messageClass.getName();
-    }
-}
+package com.heimuheimu.naiveasync.kafka.consumer;

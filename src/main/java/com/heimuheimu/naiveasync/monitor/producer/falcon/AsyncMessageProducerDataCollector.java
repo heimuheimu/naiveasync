@@ -25,6 +25,7 @@
 package com.heimuheimu.naiveasync.monitor.producer.falcon;
 
 import com.heimuheimu.naiveasync.monitor.producer.AsyncMessageProducerMonitor;
+import com.heimuheimu.naiveasync.monitor.producer.AsyncMessageProducerMonitorFactory;
 import com.heimuheimu.naivemonitor.falcon.FalconData;
 import com.heimuheimu.naivemonitor.falcon.support.AbstractFalconDataCollector;
 
@@ -43,9 +44,9 @@ public class AsyncMessageProducerDataCollector extends AbstractFalconDataCollect
 
     private volatile long lastTotalErrorCount = 0;
 
-    private ConcurrentHashMap<String, Long> lastSuccessCountMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Long> lastSuccessCountMap = new ConcurrentHashMap<>();
 
-    private ConcurrentHashMap<String, Long> lastErrorCountMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Long> lastErrorCountMap = new ConcurrentHashMap<>();
 
     private final String[] messageTypes;
 
@@ -91,7 +92,7 @@ public class AsyncMessageProducerDataCollector extends AbstractFalconDataCollect
 
     @Override
     public List<FalconData> getList() {
-        AsyncMessageProducerMonitor monitor = new AsyncMessageProducerMonitor();
+        AsyncMessageProducerMonitor monitor = AsyncMessageProducerMonitorFactory.get();
 
         List<FalconData> falconDataList = new ArrayList<>();
 

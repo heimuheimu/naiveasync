@@ -44,7 +44,7 @@ public class AsyncMessageConsumerDataCollector extends AbstractFalconDataCollect
 
     private volatile long lastExecutionErrorCount = 0;
 
-    private ConcurrentHashMap<String, Long> lastSuccessCountMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Long> lastSuccessCountMap = new ConcurrentHashMap<>();
 
     private final String[] messageTypes;
 

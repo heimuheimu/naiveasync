@@ -24,62 +24,64 @@
 
 package com.heimuheimu.naiveasync.kafka.consumer;
 
-import java.util.List;
+import org.apache.kafka.common.TopicPartition;
 
 /**
- * Kafka 消费者事件监听器
+ * Kafka 消费者事件监听器。
+ *
+ * <p>
+ *     <strong>说明：</strong>监听器的实现类必须是线程安全的。应优先考虑继承 {@link KafkaConsumerListenerSkeleton} 骨架类进行实现，
+ *     防止 {@code KafkaConsumerListener} 在后续版本增加监听事件时，带来的编译错误。
+ * </p>
  *
  * @author heimuheimu
  */
 public interface KafkaConsumerListener {
 
     /**
-     * 当拉取新消息失败时，将触发此事件
+     * 当拉取消息失败时，将触发此事件。
      *
-     * @param subscribedTopics 已订阅的 topic 名称列表
+     * @param bootstrapServers Kafka 集群启动地址，例如：host1:port1,host2:port2,...
      */
-    void onPollFailed(List<String> subscribedTopics);
+    void onPollFailed(String bootstrapServers);
 
     /**
-     * 当拉取新消息失败后，又重新恢复，将触发此事件
+     * 当拉取消息失败后，又重新恢复，将触发此事件。
      *
-     * @param subscribedTopics 已订阅的 topic 名称列表
+     * @param bootstrapServers Kafka 集群启动地址，例如：host1:port1,host2:port2,...
      */
-    void onPollRecovered(List<String> subscribedTopics);
+    void onPollRecovered(String bootstrapServers);
 
     /**
-     * 当消息反序列化失败时，将触发此事件
+     * 当消费失败时，将触发此事件。
      *
-     * @param topic 消息所在 topic 名称
+     * @param partition 消息所在 Kafka 分区信息，不会为 {@code null}
+     * @param message 消费失败的消息，如果在消息反序列化过程中出现错误，该值为 {@code null}
+     * @param bootstrapServers Kafka 集群启动地址，例如：host1:port1,host2:port2,...
      */
-    void onDecodeMessageFailed(String topic);
+    void onConsumeFailed(TopicPartition partition, Object message, String bootstrapServers);
 
     /**
-     * 当消息消费操作发生异常时，将触发此事件
-     * <p>注意：消费者不应抛出任何异常，此事件被触发时通常意味着程序 BUG，消费操作定义：{@link com.heimuheimu.naiveasync.consumer.AsyncMessageConsumer#consume(List)}</p>
+     * 当 Kafka 断点提交失败时，将触发此事件。
      *
-     * @param topic 消息所在 topic 名称
+     * @param partition 提交断点失败的 Kafka 分区信息
+     * @param bootstrapServers Kafka 集群启动地址，例如：host1:port1,host2:port2,...
      */
-    void onConsumeFailed(String topic);
+    void onCommitSyncFailed(TopicPartition partition, String bootstrapServers);
 
     /**
-     * 无法为该类型消息找到对应的消费者时，将触发此事件
+     * 当 Kafka 断点提交失败后，又重新恢复，将触发此事件。
      *
-     * @param topic 消息所在 topic 名称
+     * @param partition 提交断点恢复的 Kafka 分区信息
+     * @param bootstrapServers Kafka 集群启动地址，例如：host1:port1,host2:port2,...
      */
-    void onUnrecognizedMessage(String topic);
+    void onCommitSyncRecovered(TopicPartition partition, String bootstrapServers);
 
     /**
-     * 当 Kafka 断点提交失败时，将触发此事件
+     * 当停止拉取 Kafka 分区中的消息时，将触发此事件。
      *
-     * @param subscribedTopics 已订阅的 topic 名称列表
+     * @param partition 停止拉取的 Kafka 分区信息
+     * @param bootstrapServers Kafka 集群启动地址，例如：host1:port1,host2:port2,...
      */
-    void onCommitSyncFailed(List<String> subscribedTopics);
-
-    /**
-     * 当 Kafka 断点提交失败后，又重新恢复，将触发此事件
-     *
-     * @param subscribedTopics 已订阅的 topic 名称列表
-     */
-    void onCommitSyncRecovered(List<String> subscribedTopics);
+    void onPartitionPaused(TopicPartition partition, String bootstrapServers);
 }

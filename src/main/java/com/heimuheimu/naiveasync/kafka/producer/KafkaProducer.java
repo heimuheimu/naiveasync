@@ -47,6 +47,11 @@ import java.io.Closeable;
  * 当 {@code KafkaProducer} 发送消息失败时，会触发 {@link KafkaProducerListener} 相应的事件进行通知。
  * </blockquote>
  *
+ * <h3>数据监控</h3>
+ * <blockquote>
+ * 可通过 {@link AsyncMessageProducerMonitorFactory} 获取异步消息生产者信息监控数据。
+ * </blockquote>
+ *
  * <p><strong>说明：</strong>{@code KafkaProducer} 类是线程安全的，可在多个线程中使用同一个实例。</p>
  *
  * @author heimuheimu
@@ -85,6 +90,7 @@ public class KafkaProducer implements AsyncMessageProducer, Closeable {
      *
      * @param kafkaProducerConfig Kafka 生产者配置信息，不允许为 {@code null}
      * @param kafkaProducerListener {@code KafkaProducer} 事件监听器，允许为 {@code null}
+     * @throws NullPointerException 如果 Kafka 生产者配置信息为 {@code null}，将会抛出此异常
      */
     public KafkaProducer(KafkaProducerConfig kafkaProducerConfig, KafkaProducerListener kafkaProducerListener) throws NullPointerException {
         if (kafkaProducerConfig == null) {
@@ -96,6 +102,7 @@ public class KafkaProducer implements AsyncMessageProducer, Closeable {
         this.producer = new org.apache.kafka.clients.producer.KafkaProducer<>(this.producerConfig.toConfigMap());
         this.kafkaProducerListener = kafkaProducerListener;
         this.monitor = AsyncMessageProducerMonitorFactory.get();
+        LOGGER.info("KafkaProducer has been initialized. KafkaProducer: `{}`.", this);
     }
 
     @Override

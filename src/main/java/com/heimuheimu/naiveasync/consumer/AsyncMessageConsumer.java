@@ -24,29 +24,30 @@
 
 package com.heimuheimu.naiveasync.consumer;
 
-import java.util.List;
-
 /**
- * 异步消息消费者，仅支持同一类型的消息
- * <p>注意：实现类必须是线程安全的</p>
+ * 异步消息消费者，通常需配合消费管理者使用（例如：{@link com.heimuheimu.naiveasync.kafka.consumer.KafkaConsumerManager}），
+ * 消费者通过 {@link #getMessageClass()} 向消费管理者表明期望接收的消息类型，当管理者接收到该类型消息时，将会调用消费者的 {@link #consume(Object)} 方法。
  *
+ * <p><strong>说明：</strong>实现类必须是线程安全的。</p>
+ *
+ * @param <T> 消息的 {@code Class} 对象
  * @author heimuheimu
  */
 public interface AsyncMessageConsumer<T> {
 
     /**
-     * 获得当前消费者支持的消息类型
+     * 获得当前消费者期望接收的消息类型。
      *
-     * @return 当前消费者支持的消息类型
+     * @return 当前消费者期望接收的消息类型
      */
     Class<T> getMessageClass();
 
     /**
-     * 从 MQ 中消费异步消息列表，该方法不允许抛出异常
-     * <p>注意：消费者需自行处理消费失败的情况，已消费过的消息列表不会被重复消费
+     * 对接收到的异步消息进行消费，消费管理者将重复推送消费失败的消息，直至消费成功。
      *
-     * @param messageList 异步消息列表，不会为 {@code null}
+     * <p><strong>说明：</strong>该方法抛出异常将被消费管理者认为消费失败。</p>
+     *
+     * @param message 接收到的异步消息，不会为 {@code null}
      */
-    void consume(List<T> messageList);
-
+    void consume(T message);
 }

@@ -30,14 +30,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Kafka 消费者配置信息，更多内容可参考文档：<a href="http://kafka.apache.org/documentation/#newconsumerconfigs">http://kafka.apache.org/documentation/#newconsumerconfigs</a>
+ * Kafka 消费者配置信息，更多内容可参考文档：<a href="http://kafka.apache.org/documentation/#newconsumerconfigs">http://kafka.apache.org/documentation/#newconsumerconfigs</a>。
+ *
+ * <p><strong>说明：</strong>{@code KafkaConsumerConfig} 类是非线程安全的，不允许多个线程使用同一个实例。</p>
  *
  * @author heimuheimu
  */
 public class KafkaConsumerConfig {
 
     /**
-     * Kafka 集群启动地址，例如：host1:port1,host2:port2,...
+     * Kafka 集群启动地址，例如：host1:port1,h ost2:port2,...
      */
     private String bootstrapServers = "";
 
@@ -47,7 +49,12 @@ public class KafkaConsumerConfig {
     private String groupId = "";
 
     /**
-     * 获得 Kafka 集群启动地址，例如：host1:port1,host2:port2,...
+     * 单次 Poll 操作返回的最大消息数量
+     */
+    private int maxPollRecords = 500;
+
+    /**
+     * 获得 Kafka 集群启动地址，例如：host1:port1,host2:port2,...。
      *
      * @return Kafka 集群启动地址，例如：host1:port1,host2:port2,...
      */
@@ -56,7 +63,7 @@ public class KafkaConsumerConfig {
     }
 
     /**
-     * 设置 Kafka 集群启动地址，例如：host1:port1,host2:port2,...
+     * 设置 Kafka 集群启动地址，例如：host1:port1,host2:port2,...。
      *
      * @param bootstrapServers Kafka 集群启动地址，例如：host1:port1,host2:port2,...
      */
@@ -65,7 +72,7 @@ public class KafkaConsumerConfig {
     }
 
     /**
-     * 获得 Kafka 消费者组 ID
+     * 获得 Kafka 消费者组 ID。
      *
      * @return Kafka 消费者组 ID
      */
@@ -74,7 +81,7 @@ public class KafkaConsumerConfig {
     }
 
     /**
-     * 设置 Kafka 消费者组 ID
+     * 设置 Kafka 消费者组 ID。
      *
      * @param groupId Kafka 消费者组 ID
      */
@@ -83,9 +90,27 @@ public class KafkaConsumerConfig {
     }
 
     /**
-     * 根据当前配置信息返回一个用于构造 {@link org.apache.kafka.clients.consumer.KafkaConsumer} 实例的配置信息 Map
+     * 获得单次 Poll 操作返回的最大消息数量。
      *
-     * @return Kafka 配置信息 Map
+     * @return 单次 Poll 操作返回的最大消息数量
+     */
+    public int getMaxPollRecords() {
+        return maxPollRecords;
+    }
+
+    /**
+     * 设置单次 Poll 操作返回的最大消息数量。
+     *
+     * @param maxPollRecords 单次 Poll 操作返回的最大消息数量
+     */
+    public void setMaxPollRecords(int maxPollRecords) {
+        this.maxPollRecords = maxPollRecords;
+    }
+
+    /**
+     * 根据当前配置信息返回一个用于构造 {@link org.apache.kafka.clients.consumer.KafkaConsumer} 实例的配置信息 {@code Map}。
+     *
+     * @return Kafka 配置信息 {@code Map}
      */
     public Map<String, Object> toConfigMap() {
         HashMap<String, Object> configMap = new HashMap<>();
@@ -104,7 +129,7 @@ public class KafkaConsumerConfig {
         configMap.put("fetch.max.bytes", 52428800); //可获取的最大字节数：50 MB
         configMap.put("isolation.level", "read_uncommitted");
         configMap.put("max.poll.interval.ms", 300000); //5 分钟
-        configMap.put("max.poll.records", 500); //单次 poll 操作返回的最大消息数量：500
+        configMap.put("max.poll.records", maxPollRecords); //单次 poll 操作返回的最大消息数量：500
         return configMap;
     }
 
@@ -113,6 +138,7 @@ public class KafkaConsumerConfig {
         return "KafkaConsumerConfig{" +
                 "bootstrapServers='" + bootstrapServers + '\'' +
                 ", groupId='" + groupId + '\'' +
+                ", maxPollRecords=" + maxPollRecords +
                 '}';
     }
 }
