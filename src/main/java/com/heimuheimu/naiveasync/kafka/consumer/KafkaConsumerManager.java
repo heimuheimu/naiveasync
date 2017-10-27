@@ -312,6 +312,7 @@ public class KafkaConsumerManager implements Closeable {
                                         asyncMessageConsumer.consume(message);
                                         lastOffset = record.offset();
                                         continuesConsumeFailedCountMap.remove(partition);
+                                        monitor.onSuccessConsumed(topicName, 1);
                                     } catch (Exception e) {
                                         LOGGER.error("Consume message failed: `" + e.getMessage() + "`. Thread: `"
                                             + getName() + "`. TopicPartition: `" + partition + "`. KafkaConsumerConfig: `" + config
@@ -339,6 +340,11 @@ public class KafkaConsumerManager implements Closeable {
                         + "`. KafkaConsumerConfig: `" + config + "`.", e);
             } finally {
                 close();
+                try {
+                    consumer.close();
+                } catch (Exception e) {
+                    LOGGER.error("KafkaConsumer closed failed.", e);
+                }
                 CONSUMER_INFO_LOGGER.info("Kafka consumer thread has been stopped. Thread: `{}`. KafkaConsumerConfig: `{}`.", getName(), config);
             }
         }
@@ -383,7 +389,6 @@ public class KafkaConsumerManager implements Closeable {
             if (!stopFlag) {
                 try {
                     stopFlag = true;
-                    consumer.close();
                     interrupt();
                 } catch (Exception e) {
                     LOGGER.error("Consumer closed failed. Thread: `" + getName() + "`. KafkaConsumerConfig: `" + config + "`.", e);
