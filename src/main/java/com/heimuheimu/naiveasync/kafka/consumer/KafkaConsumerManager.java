@@ -64,10 +64,6 @@ public class KafkaConsumerManager implements Closeable {
      */
     private final Map<String, AsyncMessageConsumer<?>> consumerMap;
 
-    /**
-     * Kafka 消费者已订阅的 Topic 名称列表
-     */
-    private final List<String> topicList;
 
     /**
      * Kafka 消费者配置信息
@@ -83,11 +79,6 @@ public class KafkaConsumerManager implements Closeable {
      * Kafka 消费者事件监听器
      */
     private final KafkaConsumerListener listener;
-
-    /**
-     * 管理者管理的 Kafka 消费者数量
-     */
-    private final int poolSize;
 
     /**
      * 消息与字节数组转换器
@@ -116,40 +107,29 @@ public class KafkaConsumerManager implements Closeable {
      * @param kafkaConsumerConfig Kafka 消费者配置信息，不允许为 {@code null}
      * @param maxConsumeRetryTimes 同一条消息最大连续消费失败次数，不允许小于 0
      * @param kafkaConsumerListener Kafka 消费者事件监听器，允许为 {@code null}
-     * @param poolSize Kafka 消费者线程数，不允许小于等于 0
      * @throws IllegalArgumentException 如果消费者列表为 {@code null} 或空列表，将抛出此异常
      * @throws IllegalArgumentException 如果 Kafka 消费者配置信息为 {@code null}，将抛出此异常
      * @throws IllegalArgumentException 如果同一条消息最大连续消费失败次数小于 0，将抛出此异常
-     * @throws IllegalArgumentException 如果 Kafka 消费者线程数小于等于 0，将抛出此异常
      */
     public KafkaConsumerManager(List<AsyncMessageConsumer<?>> consumers, KafkaConsumerConfig kafkaConsumerConfig,
-            int maxConsumeRetryTimes, KafkaConsumerListener kafkaConsumerListener, int poolSize) throws IllegalArgumentException {
+            int maxConsumeRetryTimes, KafkaConsumerListener kafkaConsumerListener) throws IllegalArgumentException {
         if (consumers == null || consumers.isEmpty()) {
             LOGGER.error("Create KafkaConsumerManager failed: `consumers could not be null or empty`. Consumers: `"
                     + consumers + "`. KafkaConsumerConfig: `" + kafkaConsumerConfig + "`. KafkaConsumerListener: `"
-                    + kafkaConsumerListener + "`. PoolSize: `" + poolSize + "`.");
+                    + kafkaConsumerListener + "`.");
             throw new IllegalArgumentException("Create KafkaConsumerManager failed: `consumers could not be null or empty`. Consumers: `"
                     + consumers + "`. KafkaConsumerConfig: `" + kafkaConsumerConfig + "`. KafkaConsumerListener: `"
-                    + kafkaConsumerListener + "`. PoolSize: `" + poolSize + "`.");
+                    + kafkaConsumerListener + "`.");
         }
         if (kafkaConsumerConfig == null) {
             LOGGER.error("Create KafkaConsumerManager failed: `kafkaConsumerConfig could not be null or empty`. Consumers: `"
                     + consumers + "`. KafkaConsumerConfig: `null`. KafkaConsumerListener: `"
-                    + kafkaConsumerListener + "`. PoolSize: `" + poolSize + "`.");
+                    + kafkaConsumerListener + "`.");
             throw new IllegalArgumentException("Create KafkaConsumerManager failed: `kafkaConsumerConfig could not be null or empty`. Consumers: `"
                     + consumers + "`. KafkaConsumerConfig: `null`. KafkaConsumerListener: `"
-                    + kafkaConsumerListener + "`. PoolSize: `" + poolSize + "`.");
-        }
-        if (poolSize <= 0) {
-            LOGGER.error("Create KafkaConsumerManager failed: `poolSize could not be equal or less than 0`. Consumers: `"
-                    + consumers + "`. KafkaConsumerConfig: `" + kafkaConsumerConfig + "`. KafkaConsumerListener: `"
-                    + kafkaConsumerListener + "`. PoolSize: `" + poolSize + "`.");
-            throw new IllegalArgumentException("Create KafkaConsumerManager failed: `poolSize could not be equal or less than 0`. Consumers: `"
-                    + consumers + "`. KafkaConsumerConfig: `" + kafkaConsumerConfig + "`. KafkaConsumerListener: `"
-                    + kafkaConsumerListener + "`. PoolSize: `" + poolSize + "`.");
+                    + kafkaConsumerListener + "`.");
         }
         this.consumerMap = new HashMap<>();
-        this.topicList = new ArrayList<>();
         for (AsyncMessageConsumer<?> consumer : consumers) {
             String topicName = KafkaUtil.getTopicName(consumer.getMessageClass());
             AsyncMessageConsumer<?> existedConsumer = this.consumerMap.get(topicName);
@@ -157,12 +137,10 @@ public class KafkaConsumerManager implements Closeable {
                 LOGGER.error("Consumer `{}` is existed. It will be overridden. Previous consumer: `{}`. New Consumer: `{}`. KafkaConsumerConfig: `{}`.",
                         topicName, existedConsumer, consumer, kafkaConsumerConfig);
             }
-            this.topicList.add(topicName);
             this.consumerMap.put(topicName, consumer);
         }
         this.config = kafkaConsumerConfig;
         this.listener = new KafkaConsumerListenerWrapper(kafkaConsumerListener);
-        this.poolSize = poolSize;
         this.maxConsumeRetryTimes = maxConsumeRetryTimes;
         this.transcoder = new SimpleMessageTranscoder();
         this.monitor = AsyncMessageConsumerMonitorFactory.get();
@@ -178,20 +156,27 @@ public class KafkaConsumerManager implements Closeable {
         if (state == BeanStatusEnum.UNINITIALIZED) {
             state = BeanStatusEnum.NORMAL;
             try {
-                for (int i = 0; i < poolSize; i++) {
-                    KafkaConsumeThread consumeThread = new KafkaConsumeThread();
-                    consumeThread.setName("naiveasync-kafka-consumer-" + i);
-                    consumeThread.start();
-                    consumeThreadList.add(consumeThread);
+                for (String topic : consumerMap.keySet()) {
+                    AsyncMessageConsumer<?> consumer = consumerMap.get(topic);
+                    int threadPoolSize = 1;
+                    if (consumer instanceof KafkaAsyncMessageConsumer) {
+                        threadPoolSize = ((KafkaAsyncMessageConsumer) consumer).getPoolSize();
+                    }
+                    for (int i = 0; i < threadPoolSize; i++) {
+                        KafkaConsumeThread consumeThread = new KafkaConsumeThread(consumer);
+                        consumeThread.setName("naiveasync-kafka-consumer-" + i + "[" + topic + "]");
+                        consumeThread.start();
+                        consumeThreadList.add(consumeThread);
+                    }
                 }
                 CONSUMER_INFO_LOGGER.info("KafkaConsumerManager has been initialized. Cost: `{} ms`. KafkaConsumerConfig: `{}`. PoolSize: `{}`. Topics: `{}`. Listener: `{}`.",
-                        (System.currentTimeMillis() - startTime), config, poolSize, topicList, listener);
+                        (System.currentTimeMillis() - startTime), config, consumeThreadList.size(), consumerMap.keySet(), listener);
             } catch (Exception e) {
-                LOGGER.error("KafkaConsumerManager initialize failed. KafkaConsumerConfig: `" + config + "`. PoolSize: `" + poolSize
-                                + "`. Topics: `" + topicList + "`. Listener: `" + listener + "`.", e);
+                LOGGER.error("KafkaConsumerManager initialize failed. KafkaConsumerConfig: `" + config + "`. PoolSize: `" + consumeThreadList.size()
+                                + "`. Topics: `" + consumerMap.keySet() + "`. Listener: `" + listener + "`.", e);
                 close();
-                throw new IllegalStateException("KafkaConsumerManager initialize failed. KafkaConsumerConfig: `" + config + "`. PoolSize: `" + poolSize
-                        + "`. Topics: `" + topicList + "`. Listener: `" + listener + "`.", e);
+                throw new IllegalStateException("KafkaConsumerManager initialize failed. KafkaConsumerConfig: `" + config + "`. PoolSize: `" + consumeThreadList.size()
+                        + "`. Topics: `" + consumerMap.keySet() + "`. Listener: `" + listener + "`.", e);
             }
         }
     }
@@ -215,17 +200,17 @@ public class KafkaConsumerManager implements Closeable {
                 }
             }
             CONSUMER_INFO_LOGGER.info("KafkaConsumerManager has been stopped. Cost: `{} ms`. KafkaConsumerConfig: `{}`. PoolSize: `{}`. Topics: `{}`. Listener: `{}`.",
-                    (System.currentTimeMillis() - startTime), config, poolSize, topicList, listener);
+                    (System.currentTimeMillis() - startTime), config, consumeThreadList.size(), consumerMap.keySet(), listener);
         }
     }
 
     @Override
     public String toString() {
         return "KafkaConsumerManager{" +
-                "topicList=" + topicList +
+                "consumerMap=" + consumerMap +
                 ", config=" + config +
+                ", maxConsumeRetryTimes=" + maxConsumeRetryTimes +
                 ", listener=" + listener +
-                ", poolSize=" + poolSize +
                 ", state=" + state +
                 '}';
     }
@@ -241,24 +226,31 @@ public class KafkaConsumerManager implements Closeable {
 
         private final KafkaConsumer<byte[], byte[]> consumer;
 
+        private final String topic;
+
+        private final AsyncMessageConsumer asyncMessageConsumer;
+
         private volatile boolean stopFlag = false;
 
         private boolean isPollFailed = false;
 
-        private KafkaConsumeThread() {
-            consumer = new KafkaConsumer<>(config.toConfigMap());
-            consumer.subscribe(topicList, new ConsumerRebalanceListener() {
+        private  KafkaConsumeThread(AsyncMessageConsumer asyncMessageConsumer) {
+            this.consumer = new KafkaConsumer<>(config.toConfigMap());
+            this.topic = KafkaUtil.getTopicName(asyncMessageConsumer.getMessageClass());
+            this.asyncMessageConsumer = asyncMessageConsumer;
+
+            consumer.subscribe(Collections.singletonList(topic), new ConsumerRebalanceListener() {
 
                 @Override
                 public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-                    CONSUMER_INFO_LOGGER.info("[Rebalance] Revoked partitions: `{}`. Thread: `{}`. KafkaConsumerConfig: `{}`.",
-                            partitions, getName(), config);
+                    CONSUMER_INFO_LOGGER.info("[Rebalance] Revoked partitions: `{}`. Thread: `{}`. Topic: `{}`. KafkaConsumerConfig: `{}`.",
+                            partitions, getName(), topic, config);
                 }
 
                 @Override
                 public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
-                    CONSUMER_INFO_LOGGER.info("[Rebalance] Assigned partitions: `{}`. Thread: `{}`. KafkaConsumerConfig: `{}`.",
-                            partitions, getName(), config);
+                    CONSUMER_INFO_LOGGER.info("[Rebalance] Assigned partitions: `{}`. Thread: `{}`. Topic: `{}`. KafkaConsumerConfig: `{}`.",
+                            partitions, getName(), topic, config);
                 }
             });
         }
@@ -267,8 +259,8 @@ public class KafkaConsumerManager implements Closeable {
         @SuppressWarnings("unchecked")
         public void run() {
             try {
-                CONSUMER_INFO_LOGGER.info("Kafka consumer thread has been started. Thread: `{}`. Assigned partitions: `{}`. KafkaConsumerConfig: `{}`.",
-                        consumer.assignment(), getName(), config);
+                CONSUMER_INFO_LOGGER.info("Kafka consumer thread has been started. Thread: `{}`. Topic: `{}`. Consumer: `{}`. Assigned partitions: `{}`. KafkaConsumerConfig: `{}`.",
+                        getName(), topic, asyncMessageConsumer, consumer.assignment(), config);
                 ConsumerRecords<byte[], byte[]> records;
                 while (!stopFlag) {
                     if (!failedCommitOffsetQueue.isEmpty()) {
@@ -300,8 +292,6 @@ public class KafkaConsumerManager implements Closeable {
                     }
                     if (records != null) {
                         for (TopicPartition partition : records.partitions()) { //按分区进行遍历
-                            String topicName = partition.topic();
-                            AsyncMessageConsumer asyncMessageConsumer = consumerMap.get(topicName);
                             if (asyncMessageConsumer != null) {
                                 List<ConsumerRecord<byte[], byte[]>> partitionRecords = records.records(partition);
                                 Long lastOffset = null;
@@ -312,7 +302,7 @@ public class KafkaConsumerManager implements Closeable {
                                         asyncMessageConsumer.consume(message);
                                         lastOffset = record.offset();
                                         continuesConsumeFailedCountMap.remove(partition);
-                                        monitor.onSuccessConsumed(topicName, 1);
+                                        monitor.onSuccessConsumed(topic, 1);
                                     } catch (Exception e) {
                                         LOGGER.error("Consume message failed: `" + e.getMessage() + "`. Thread: `"
                                             + getName() + "`. TopicPartition: `" + partition + "`. KafkaConsumerConfig: `" + config
@@ -343,9 +333,9 @@ public class KafkaConsumerManager implements Closeable {
                 try {
                     consumer.close();
                 } catch (Exception e) {
-                    LOGGER.error("KafkaConsumer closed failed.", e);
+                    LOGGER.error("KafkaConsumer closed failed. Thread: `" + getName() + "`. Topic: `" + topic + "`.", e);
                 }
-                CONSUMER_INFO_LOGGER.info("Kafka consumer thread has been stopped. Thread: `{}`. KafkaConsumerConfig: `{}`.", getName(), config);
+                CONSUMER_INFO_LOGGER.info("Kafka consumer thread has been stopped. Thread: `{}`. Topic: `{}`. KafkaConsumerConfig: `{}`.", getName(), topic, config);
             }
         }
 
