@@ -30,15 +30,25 @@ import com.heimuheimu.naivemonitor.falcon.FalconData;
 import com.heimuheimu.naivemonitor.falcon.support.AbstractFalconDataCollector;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 异步消息消费者监控数据采集器
+ * 异步消息消费者监控数据采集器。
  *
  * @author heimuheimu
  */
 public class AsyncMessageConsumerDataCollector extends AbstractFalconDataCollector {
+
+    private volatile long lastTotalPolledCount = 0;
+
+    private volatile long lastTotalDelayedMills = 0;
+
+    private final ConcurrentHashMap<String, Long> lastPolledCountMap = new ConcurrentHashMap<>();
+
+    private final ConcurrentHashMap<String, Long> lastDelayedMillsMap = new ConcurrentHashMap<>();
 
     private volatile long lastTotalSuccessCount = 0;
 
@@ -46,31 +56,25 @@ public class AsyncMessageConsumerDataCollector extends AbstractFalconDataCollect
 
     private final ConcurrentHashMap<String, Long> lastSuccessCountMap = new ConcurrentHashMap<>();
 
-    private final String[] messageTypes;
+    private final Map<String, String> messageTypeMap;
 
     /**
-     * 构造一个异步消息消费者监控数据采集器
+     * 构造一个异步消息消费者监控数据采集器。
      */
     public AsyncMessageConsumerDataCollector() {
-        this(new String[0]);
+        this(null);
     }
 
     /**
-     * 构造一个异步消息消费者监控数据采集器，并会额外上报指定消息类型的成功消费次数
+     * 构造一个异步消息消费者监控数据采集器，并会额外上报指定消息类型的监控数据。
      *
-     * @param messageTypes 需额外上报的消息类型，以 "," 进行分割
+     * @param messageTypeMap 需额外上报的消息类型 Map，Key 为消息类型，Value 为该消息类型对应的 Metric 名称。
      */
-    public AsyncMessageConsumerDataCollector(String messageTypes) {
-        this(messageTypes.split(","));
-    }
-
-    /**
-     * 构造一个异步消息消费者监控数据采集器，并会额外上报指定消息类型的成功消费次数
-     *
-     * @param messageTypes 需额外上报的消息类型数组
-     */
-    public AsyncMessageConsumerDataCollector(String[] messageTypes) {
-        this.messageTypes = messageTypes;
+    public AsyncMessageConsumerDataCollector(Map<String, String> messageTypeMap) {
+        if (messageTypeMap == null) {
+            messageTypeMap = new HashMap<>();
+        }
+        this.messageTypeMap = messageTypeMap;
     }
 
     @Override
@@ -85,7 +89,7 @@ public class AsyncMessageConsumerDataCollector extends AbstractFalconDataCollect
 
     @Override
     public int getPeriod() {
-        return 15;
+        return 30;
     }
 
     @Override
@@ -93,6 +97,20 @@ public class AsyncMessageConsumerDataCollector extends AbstractFalconDataCollect
         AsyncMessageConsumerMonitor monitor = AsyncMessageConsumerMonitorFactory.get();
 
         List<FalconData> falconDataList = new ArrayList<>();
+
+        long totalPolledCount = monitor.getTotalPolledCount();
+        long polledCount = totalPolledCount - lastTotalPolledCount;
+        falconDataList.add(create("_polled", polledCount));
+        lastTotalPolledCount = totalPolledCount;
+
+        long totalDelayedMills = monitor.getTotalDelayedMills();
+        long delayedMills = totalDelayedMills - lastTotalDelayedMills;
+        double avgDelayedMills = polledCount == 0 ? 0 : (double) delayedMills / polledCount;
+        falconDataList.add(create("_avg_delay", avgDelayedMills));
+        lastTotalDelayedMills = totalDelayedMills;
+
+        falconDataList.add(create("_max_delay", monitor.getMaxDelayedMills()));
+        monitor.resetMaxDelayedMills();
 
         long totalSuccessCount = monitor.getTotalSuccessCount();
         falconDataList.add(create("_success", totalSuccessCount - lastTotalSuccessCount));
@@ -102,13 +120,29 @@ public class AsyncMessageConsumerDataCollector extends AbstractFalconDataCollect
         falconDataList.add(create("_exec_error", executionErrorCount - lastExecutionErrorCount));
         lastExecutionErrorCount = executionErrorCount;
 
-        if (messageTypes != null && messageTypes.length > 0) {
-            for (String messageType : messageTypes) {
-                long successCount = monitor.getSuccessCount(messageType);
-                long lastSuccessCount = lastSuccessCountMap.containsKey(messageType) ? lastSuccessCountMap.get(messageType) : 0;
-                falconDataList.add(create("_" + messageType + "_success", successCount - lastSuccessCount));
-                lastSuccessCountMap.put(messageType, successCount);
-            }
+        for (String messageType : messageTypeMap.keySet()) {
+            String messageTypeMetric = messageTypeMap.get(messageType);
+
+            long totalSpecificPolledCount = monitor.getPolledCount(messageType);
+            long lastSpecificPolledCount = lastPolledCountMap.containsKey(messageType) ? lastPolledCountMap.get(messageType) : 0;
+            long specificPolledCount = totalSpecificPolledCount - lastSpecificPolledCount;
+            falconDataList.add(create("_" + messageTypeMetric + "_polled", specificPolledCount));
+            lastPolledCountMap.put(messageType, totalSpecificPolledCount);
+
+            long totalSpecificDelayedMills = monitor.getDelayedMills(messageType);
+            long lastSpecificDelayedMills = lastDelayedMillsMap.containsKey(messageType) ? lastDelayedMillsMap.get(messageType) : 0;
+            long specificDelayedMills = totalSpecificDelayedMills - lastSpecificDelayedMills;
+            double avgSpecificDelayedMills = specificPolledCount == 0 ? 0 : (double) specificDelayedMills / specificPolledCount;
+            falconDataList.add(create("_" + messageTypeMetric + "_avg_delay", specificPolledCount));
+            lastDelayedMillsMap.put(messageType, totalSpecificDelayedMills);
+
+            falconDataList.add(create("_" + messageTypeMetric + "_max_delay", monitor.getSpecificMaxDelayedMills(messageType)));
+            monitor.resetSpecificMaxDelayedMills(messageType);
+
+            long successCount = monitor.getSuccessCount(messageType);
+            long lastSuccessCount = lastSuccessCountMap.containsKey(messageType) ? lastSuccessCountMap.get(messageType) : 0;
+            falconDataList.add(create("_" + messageTypeMetric + "_success", successCount - lastSuccessCount));
+            lastSuccessCountMap.put(messageType, successCount);
         }
 
         return falconDataList;
