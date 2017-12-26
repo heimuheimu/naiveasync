@@ -22,22 +22,25 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.naiveasync.kafka.consumer;
+package com.heimuheimu.naiveasync.consumer;
 
-import com.heimuheimu.naiveasync.consumer.AsyncMessageConsumer;
+import java.util.List;
 
 /**
- * Kafka 异步消息消费者，允许设置该消息类型的消费线程数，更多信息请参考：{@link AsyncMessageConsumer}。
+ * Batch mode 为 {@code false} 的单条消息消费者抽象类。
  *
  * @param <T> 消息的 {@code Class} 对象
  * @author heimuheimu
  */
-public interface KafkaAsyncMessageConsumer<T> extends AsyncMessageConsumer<T> {
+public abstract class AbstractMessageConsumer<T> implements AsyncMessageConsumer<T> {
 
-    /**
-     * 获得该消息类型的消费线程数，不允许小于等于 0。
-     *
-     * @return 消费线程数，不允许小于等于 0
-     */
-    int getPoolSize();
+    @Override
+    public boolean isBatchMode() {
+        return false;
+    }
+
+    @Override
+    public void consume(List<T> messageList) {
+        throw new UnsupportedOperationException("Could not consume batch of messages. BatchMode: `" + isBatchMode() + "`.");
+    }
 }

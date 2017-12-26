@@ -24,8 +24,6 @@
 
 package com.heimuheimu.naiveasync.kafka.consumer;
 
-import org.apache.kafka.common.TopicPartition;
-
 /**
  * Kafka 消费者事件监听器。
  *
@@ -39,49 +37,19 @@ import org.apache.kafka.common.TopicPartition;
 public interface KafkaConsumerListener {
 
     /**
-     * 当拉取消息失败时，将触发此事件。
+     * 当 Kafka 消费者执行出现错误时，将触发此事件。
      *
+     * @param errorMessage 错误消息
+     * @param groupId 消费组名称
      * @param bootstrapServers Kafka 集群启动地址，例如：host1:port1,host2:port2,...
      */
-    void onPollFailed(String bootstrapServers);
+    void onError(String errorMessage, String groupId, String bootstrapServers);
 
     /**
-     * 当拉取消息失败后，又重新恢复，将触发此事件。
+     * 当 Kafka 消费者执行从错误中恢复时，将触发此事件。
      *
+     * @param groupId 消费组名称
      * @param bootstrapServers Kafka 集群启动地址，例如：host1:port1,host2:port2,...
      */
-    void onPollRecovered(String bootstrapServers);
-
-    /**
-     * 当消费失败时，将触发此事件。
-     *
-     * @param partition 消息所在 Kafka 分区信息，不会为 {@code null}
-     * @param message 消费失败的消息，如果在消息反序列化过程中出现错误，该值为 {@code null}
-     * @param bootstrapServers Kafka 集群启动地址，例如：host1:port1,host2:port2,...
-     */
-    void onConsumeFailed(TopicPartition partition, Object message, String bootstrapServers);
-
-    /**
-     * 当 Kafka 断点提交失败时，将触发此事件。
-     *
-     * @param partition 提交断点失败的 Kafka 分区信息
-     * @param bootstrapServers Kafka 集群启动地址，例如：host1:port1,host2:port2,...
-     */
-    void onCommitSyncFailed(TopicPartition partition, String bootstrapServers);
-
-    /**
-     * 当 Kafka 断点提交失败后，又重新恢复，将触发此事件。
-     *
-     * @param partition 提交断点恢复的 Kafka 分区信息
-     * @param bootstrapServers Kafka 集群启动地址，例如：host1:port1,host2:port2,...
-     */
-    void onCommitSyncRecovered(TopicPartition partition, String bootstrapServers);
-
-    /**
-     * 当停止拉取 Kafka 分区中的消息时，将触发此事件。
-     *
-     * @param partition 停止拉取的 Kafka 分区信息
-     * @param bootstrapServers Kafka 集群启动地址，例如：host1:port1,host2:port2,...
-     */
-    void onPartitionPaused(TopicPartition partition, String bootstrapServers);
+    void onRecover(String groupId, String bootstrapServers);
 }

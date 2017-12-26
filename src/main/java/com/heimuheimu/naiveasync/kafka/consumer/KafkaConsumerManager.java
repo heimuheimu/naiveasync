@@ -64,7 +64,6 @@ public class KafkaConsumerManager implements Closeable {
      */
     private final Map<String, AsyncMessageConsumer<?>> consumerMap;
 
-
     /**
      * Kafka 消费者配置信息
      */
@@ -224,21 +223,149 @@ public class KafkaConsumerManager implements Closeable {
 
         private final Map<TopicPartition, Long> continuesConsumeFailedCountMap = new HashMap<>();
 
-        private final KafkaConsumer<byte[], byte[]> consumer;
-
         private final String topic;
 
         private final AsyncMessageConsumer asyncMessageConsumer;
 
         private volatile boolean stopFlag = false;
 
-        private boolean isPollFailed = false;
+        private KafkaConsumer<byte[], byte[]> consumer;
 
-        private  KafkaConsumeThread(AsyncMessageConsumer asyncMessageConsumer) {
-            this.consumer = new KafkaConsumer<>(config.toConfigMap());
+        private int sleepSeconds = 2;
+
+        private boolean hasError = false;
+
+        private KafkaConsumeThread(AsyncMessageConsumer asyncMessageConsumer) {
             this.topic = KafkaUtil.getTopicName(asyncMessageConsumer.getMessageClass());
             this.asyncMessageConsumer = asyncMessageConsumer;
+            createConsumer();
+        }
 
+        @Override
+        @SuppressWarnings("unchecked")
+        public void run() {
+            try {
+                CONSUMER_INFO_LOGGER.info("Kafka consumer thread has been started. Thread: `{}`. Topic: `{}`. Consumer: `{}`. Assigned partitions: `{}`. KafkaConsumerConfig: `{}`.",
+                        getName(), topic, asyncMessageConsumer, consumer.assignment(), config);
+                consumeWhile: while (!stopFlag) {
+                    if (consumer == null) {
+                        try {
+                            createConsumer();
+                        } catch (Exception e) {
+                            LOGGER.error("Create kafka consumer failed: `" + e.getMessage() + "`. Thread: `" + getName()
+                                    + "`. Topic: `" + topic + "`.", e);
+                            monitor.onErrorExecution();
+                            onError("create consumer failed", true);
+                            continue;
+                        }
+                    }
+                    ConsumerRecords<byte[], byte[]> records = null;
+                    try {
+                        if (!stopFlag) {
+                            records = consumer.poll(Long.MAX_VALUE);
+                        }
+                    } catch (InterruptException ignored) {
+                        //do nothing
+                    } catch (Exception e) {
+                        LOGGER.error("Poll message failed: `" + e.getMessage() + "`. Assigned partitions: `" + consumer.assignment() +
+                                "`. Thread: `" + getName() + "`. KafkaConsumerConfig: `" + config + "`.", e);
+                        monitor.onErrorExecution();
+                        onError("poll failed", true);
+                        continue;
+                    }
+                    if (records != null) {
+                        for (TopicPartition partition : records.partitions()) { //按分区进行遍历
+                            List<Object> messageList = new ArrayList<>();
+                            List<Long> offsetList = new ArrayList<>();
+                            List<ConsumerRecord<byte[], byte[]>> partitionRecords = records.records(partition);
+                            Long lastOffset = null;
+                            for (ConsumerRecord<byte[], byte[]> record : partitionRecords) {
+                                monitor.onPolled(topic, System.currentTimeMillis() - record.timestamp());
+                                Object message = null;
+                                try {
+                                    message = transcoder.decode(record.value());
+                                    messageList.add(message);
+                                    offsetList.add(record.offset());
+                                } catch (Exception e) {
+                                    LOGGER.error("Decode message failed: `" + e.getMessage() + "`. Thread: `"
+                                        + getName() + "`. TopicPartition: `" + partition + "`. KafkaConsumerConfig: `" + config
+                                        + "`. Message: `" + message + "`.", e);
+                                    monitor.onErrorExecution();
+                                    onError("decode message failed", false);
+                                    continue consumeWhile;
+                                }
+                            }
+
+                            if (!messageList.isEmpty()) {
+                                if (asyncMessageConsumer.isBatchMode()) {
+                                    try {
+                                        asyncMessageConsumer.consume(messageList);
+                                    } catch (Exception e) {
+                                        LOGGER.error("Consume message failed: `" + e.getMessage() + "`. Thread: `"
+                                                + getName() + "`. TopicPartition: `" + partition + "`. KafkaConsumerConfig: `" + config
+                                                + "`. MessageList: `" + messageList + "`.", e);
+                                        monitor.onErrorExecution();
+                                        onError("consume message failed", false);
+                                        continue consumeWhile;
+                                    }
+                                    try {
+                                        commitSync(partition, offsetList.get(offsetList.size() - 1));
+                                    } catch (Exception e) {
+                                        LOGGER.error("Commit sync failed: `" + e.getMessage() + "`. Thread: `"
+                                                + getName() + "`. TopicPartition: `" + partition + "`. KafkaConsumerConfig: `"
+                                                + config + "`.", e);
+                                        onError("commit sync failed", true);
+                                        continue consumeWhile;
+                                    }
+                                } else {
+                                    for (int i = 0; i < messageList.size(); i++) {
+                                        Object message = messageList.get(i);
+                                        long offset = offsetList.get(i);
+                                        try {
+                                            asyncMessageConsumer.consume(message);
+                                        } catch (Exception e) {
+                                            LOGGER.error("Consume message failed: `" + e.getMessage() + "`. Thread: `"
+                                                    + getName() + "`. TopicPartition: `" + partition + "`. KafkaConsumerConfig: `" + config
+                                                    + "`. Message: `" + message + "`.", e);
+                                            monitor.onErrorExecution();
+                                            onError("consume message failed", false);
+                                            continue consumeWhile;
+                                        }
+                                        try {
+                                            commitSync(partition, offset);
+                                        } catch (Exception e) {
+                                            LOGGER.error("Commit sync failed: `" + e.getMessage() + "`. Thread: `"
+                                                    + getName() + "`. TopicPartition: `" + partition + "`. KafkaConsumerConfig: `"
+                                                    + config + "`.", e);
+                                            onError("commit sync failed", true);
+                                            continue consumeWhile;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    onSuccess();
+                }
+            } catch (Exception e) {//should not happen
+                LOGGER.error("KafkaConsumeThread need to be closed due to unexpected error. Thread: `" + getName()
+                        + "`. KafkaConsumerConfig: `" + config + "`.", e);
+            } finally {
+                close();
+                try {
+                    consumer.close();
+                } catch (Exception e) {
+                    LOGGER.error("KafkaConsumer closed failed. Thread: `" + getName() + "`. Topic: `" + topic + "`.", e);
+                }
+                CONSUMER_INFO_LOGGER.info("Kafka consumer thread has been stopped. Thread: `{}`. Topic: `{}`. KafkaConsumerConfig: `{}`.", getName(), topic, config);
+            }
+        }
+
+        /**
+         * 创建 {@code KafkaConsumer} 实例。
+         */
+        private void createConsumer() {
+            this.consumer = new KafkaConsumer<>(config.toConfigMap());
             consumer.subscribe(Collections.singletonList(topic), new ConsumerRebalanceListener() {
 
                 @Override
@@ -255,124 +382,40 @@ public class KafkaConsumerManager implements Closeable {
             });
         }
 
-        @Override
-        @SuppressWarnings("unchecked")
-        public void run() {
-            try {
-                CONSUMER_INFO_LOGGER.info("Kafka consumer thread has been started. Thread: `{}`. Topic: `{}`. Consumer: `{}`. Assigned partitions: `{}`. KafkaConsumerConfig: `{}`.",
-                        getName(), topic, asyncMessageConsumer, consumer.assignment(), config);
-                ConsumerRecords<byte[], byte[]> records;
-                while (!stopFlag) {
-                    if (!failedCommitOffsetQueue.isEmpty()) {
-                        Map<TopicPartition, OffsetAndMetadata> kafkaOffset;
-                        while ((kafkaOffset = failedCommitOffsetQueue.poll()) != null && !stopFlag) {
-                            commitSync(kafkaOffset, true);
-                        }
-                    }
-                    records = null;
-                    try {
-                        if (!stopFlag) {
-                            records = consumer.poll(Long.MAX_VALUE);
-                            if (isPollFailed) {
-                                isPollFailed = false;
-                                listener.onPollRecovered(config.getBootstrapServers());
-                            }
-                        }
-                    } catch (InterruptException ignored) {
-                        //do nothing
-                    } catch (Exception e) {
-                        LOGGER.error("Poll message failed: `" + e.getMessage() + "`. Assigned partitions: `" + consumer.assignment() +
-                                "`. Thread: `" + getName() + "`. KafkaConsumerConfig: `" + config + "`.", e);
-                        monitor.onErrorExecution();
-                        isPollFailed = true;
-                        listener.onPollFailed(config.getBootstrapServers());
-                        try {
-                            Thread.sleep(5000);
-                        } catch (InterruptedException ignored) {}
-                    }
-                    if (records != null) {
-                        for (TopicPartition partition : records.partitions()) { //按分区进行遍历
-                            if (asyncMessageConsumer != null) {
-                                List<ConsumerRecord<byte[], byte[]>> partitionRecords = records.records(partition);
-                                Long lastOffset = null;
-                                for (ConsumerRecord<byte[], byte[]> record : partitionRecords) {
-                                    Object message = null;
-                                    try {
-                                        message = transcoder.decode(record.value());
-                                        asyncMessageConsumer.consume(message);
-                                        lastOffset = record.offset();
-                                        continuesConsumeFailedCountMap.remove(partition);
-                                        monitor.onSuccessConsumed(topic, 1);
-                                    } catch (Exception e) {
-                                        LOGGER.error("Consume message failed: `" + e.getMessage() + "`. Thread: `"
-                                            + getName() + "`. TopicPartition: `" + partition + "`. KafkaConsumerConfig: `" + config
-                                            + "`. Message: `" + message + "`.", e);
-                                        monitor.onErrorExecution();
-                                        listener.onConsumeFailed(partition, message, config.getBootstrapServers());
-                                        addConsumeFailedCount(partition);
-                                        break; //消息消费发生异常，该分区已获取的其它消息不再进行消费
-                                    }
-                                }
-                                if (lastOffset != null) {
-                                    Map<TopicPartition, OffsetAndMetadata> kafkaOffset = Collections.singletonMap(partition, new OffsetAndMetadata(lastOffset + 1));
-                                    commitSync(kafkaOffset, false);
-                                }
-                            } else { //should not happen
-                                LOGGER.error("There is no consumer for TopicPartition `{}`. Thread: `{}`. KafkaConsumerConfig: `{}`.",
-                                        partition, getName(), config);
-                                monitor.onErrorExecution();
-                            }
-                        }
-                    }
-                }
-            } catch (Exception e) {//should not happen
-                LOGGER.error("KafkaConsumeThread need to be closed due to unexpected error. Thread: `" + getName()
-                        + "`. KafkaConsumerConfig: `" + config + "`.", e);
-            } finally {
-                close();
+        /**
+         * 当 {@code KafkaConsumer} 操作出现异常时，调用此方法。
+         */
+        private void onError(String errorMessage, boolean needCloseConsumer) {
+            if (needCloseConsumer && this.consumer != null) {
                 try {
-                    consumer.close();
+                    this.consumer.close();
                 } catch (Exception e) {
                     LOGGER.error("KafkaConsumer closed failed. Thread: `" + getName() + "`. Topic: `" + topic + "`.", e);
                 }
-                CONSUMER_INFO_LOGGER.info("Kafka consumer thread has been stopped. Thread: `{}`. Topic: `{}`. KafkaConsumerConfig: `{}`.", getName(), topic, config);
+                this.consumer = null;
             }
-        }
-
-        private void commitSync(Map<TopicPartition, OffsetAndMetadata> offset, boolean isRecovered) {
-            TopicPartition partition = null;
+            hasError = true;
             try {
-                partition = offset.keySet().iterator().next(); //must exist
-                consumer.commitSync(offset);
+                Thread.sleep(sleepSeconds * 1000);
+            } catch (InterruptedException ignored) {}
+            sleepSeconds *= 2;
+            listener.onError(errorMessage, config.getGroupId(), config.getBootstrapServers());
+        }
 
-                if (isRecovered) {
-                    listener.onCommitSyncRecovered(partition, config.getBootstrapServers());
-                }
-            } catch (Exception e) {
-                LOGGER.error("Commit sync failed. Offset: `" + offset + "`. Thread: `" + getName() + "`. KafkaConsumerConfig: `"
-                        + config + "`.", e);
-                monitor.onErrorExecution();
-                failedCommitOffsetQueue.offer(offset);
-                listener.onCommitSyncFailed(partition, config.getBootstrapServers());
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException ignored) {}
+        /**
+         * 当 {@code KafkaConsumer} 操作成功时，调用此方法。
+         */
+        private void onSuccess() {
+            sleepSeconds = 2;
+            if (hasError) {
+                listener.onRecover(config.getGroupId(), config.getBootstrapServers());
+                hasError = false;
             }
         }
 
-        private void addConsumeFailedCount(TopicPartition partition) {
-            Long failedCount = continuesConsumeFailedCountMap.get(partition);
-            failedCount = (failedCount != null) ? (failedCount + 1) : 1;
-            continuesConsumeFailedCountMap.put(partition, failedCount);
-            if (failedCount > maxConsumeRetryTimes) {
-                try {
-                    consumer.pause(Collections.singletonList(partition));
-                    listener.onPartitionPaused(partition, config.getBootstrapServers());
-                } catch (Exception e) {
-                    LOGGER.error("Pause partition failed. TopicPartition: `" + partition + "`. Thread: `" + getName()
-                            + "`. KafkaConsumerConfig: `" + config + "`.", e);
-                }
-            }
+        private void commitSync(TopicPartition partition, long lastOffset) {
+            Map<TopicPartition, OffsetAndMetadata> kafkaOffset = Collections.singletonMap(partition, new OffsetAndMetadata(lastOffset + 1));
+            consumer.commitSync(kafkaOffset);
         }
 
         private synchronized void close() {
@@ -396,71 +439,24 @@ public class KafkaConsumerManager implements Closeable {
         }
 
         @Override
-        public void onPollFailed(String bootstrapServers) {
+        public void onError(String errorMessage, String groupId, String bootstrapServers) {
             if (listener != null) {
                 try {
-                    listener.onPollFailed(bootstrapServers);
+                    listener.onError(errorMessage, groupId, bootstrapServers);
                 } catch (Exception e) {
-                    LOGGER.error("Call KafkaConsumerListener#onPollFailed() failed. KafkaConsumerConfig: `" + config + "`.", e);
-                }
-            }
-        }
-
-        @Override
-        public void onPollRecovered(String bootstrapServers) {
-            if (listener != null) {
-                try {
-                    listener.onPollRecovered(bootstrapServers);
-                } catch (Exception e) {
-                    LOGGER.error("Call KafkaConsumerListener#onPollRecovered() failed. KafkaConsumerConfig: `" + config + "`.", e);
-                }
-            }
-        }
-
-        @Override
-        public void onConsumeFailed(TopicPartition partition, Object message, String bootstrapServers) {
-            if (listener != null) {
-                try {
-                    listener.onConsumeFailed(partition, message, bootstrapServers);
-                } catch (Exception e) {
-                    LOGGER.error("Call KafkaConsumerListener#onConsumeFailed() failed. TopicPartition: `" + partition + "`. Message: `"
-                            + message + "`. KafkaConsumerConfig: `" + config + "`.", e);
-                }
-            }
-        }
-
-        @Override
-        public void onCommitSyncFailed(TopicPartition partition, String bootstrapServers) {
-            if (listener != null) {
-                try {
-                    listener.onCommitSyncFailed(partition, bootstrapServers);
-                } catch (Exception e) {
-                    LOGGER.error("Call KafkaConsumerListener#onCommitSyncFailed() failed. TopicPartition: `" + partition
+                    LOGGER.error("Call KafkaConsumerListener#onError() failed. ErrorMessage: `" + errorMessage
                             + "`. KafkaConsumerConfig: `" + config + "`.", e);
                 }
             }
         }
 
         @Override
-        public void onCommitSyncRecovered(TopicPartition partition, String bootstrapServers) {
+        public void onRecover(String groupId, String bootstrapServers) {
             if (listener != null) {
                 try {
-                    listener.onCommitSyncRecovered(partition, bootstrapServers);
+                    listener.onRecover(groupId, bootstrapServers);
                 } catch (Exception e) {
-                    LOGGER.error("Call KafkaConsumerListener#onCommitSyncRecovered() failed. TopicPartition: `" + partition
-                            + "`. KafkaConsumerConfig: `" + config + "`.", e);
-                }
-            }
-        }
-
-        @Override
-        public void onPartitionPaused(TopicPartition partition, String bootstrapServers) {
-            if (listener != null) {
-                try {
-                    listener.onPartitionPaused(partition, bootstrapServers);
-                } catch (Exception e) {
-                    LOGGER.error("Call KafkaConsumerListener#onPartitionPaused() failed. TopicPartition: `" + partition
-                            + "`. KafkaConsumerConfig: `" + config + "`.", e);
+                    LOGGER.error("Call KafkaConsumerListener#onRecover() failed. KafkaConsumerConfig: `" + config + "`.", e);
                 }
             }
         }

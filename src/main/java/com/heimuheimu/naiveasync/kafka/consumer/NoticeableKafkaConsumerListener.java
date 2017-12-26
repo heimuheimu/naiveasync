@@ -28,7 +28,6 @@ import com.heimuheimu.naivemonitor.MonitorUtil;
 import com.heimuheimu.naivemonitor.alarm.NaiveServiceAlarm;
 import com.heimuheimu.naivemonitor.alarm.ServiceAlarmMessageNotifier;
 import com.heimuheimu.naivemonitor.alarm.ServiceContext;
-import org.apache.kafka.common.TopicPartition;
 
 import java.util.List;
 import java.util.Map;
@@ -90,48 +89,21 @@ public class NoticeableKafkaConsumerListener extends KafkaConsumerListenerSkelet
     }
 
     @Override
-    public void onPollFailed(String bootstrapServers) {
+    public void onError(String errorMessage, String groupId, String bootstrapServers) {
         ServiceContext serviceContext = getServiceContext(bootstrapServers);
+        serviceContext.setName("[KafkaConsumer] [" + groupId + "] " + errorMessage);
         naiveServiceAlarm.onCrashed(serviceContext);
     }
 
     @Override
-    public void onPollRecovered(String bootstrapServers) {
+    public void onRecover(String groupId, String bootstrapServers) {
         ServiceContext serviceContext = getServiceContext(bootstrapServers);
+        serviceContext.setName("[KafkaConsumer] [" + groupId + "]");
         naiveServiceAlarm.onRecovered(serviceContext);
-    }
-
-    @Override
-    public void onConsumeFailed(TopicPartition partition, Object message, String bootstrapServers) {
-        ServiceContext serviceContext = getServiceContext(bootstrapServers);
-        serviceContext.setName("[ErrorConsume][KafkaConsumer] " + partition.topic() + "-" + partition.partition());
-        naiveServiceAlarm.onCrashed(serviceContext);
-    }
-
-    @Override
-    public void onCommitSyncFailed(TopicPartition partition, String bootstrapServers) {
-        ServiceContext serviceContext = getServiceContext(bootstrapServers);
-        serviceContext.setName("[CommitSync][KafkaConsumer] " + partition.topic() + "-" + partition.partition());
-        naiveServiceAlarm.onCrashed(serviceContext);
-    }
-
-    @Override
-    public void onCommitSyncRecovered(TopicPartition partition, String bootstrapServers) {
-        ServiceContext serviceContext = getServiceContext(bootstrapServers);
-        serviceContext.setName("[CommitSync][KafkaConsumer] " + partition.topic() + "-" + partition.partition());
-        naiveServiceAlarm.onRecovered(serviceContext);
-    }
-
-    @Override
-    public void onPartitionPaused(TopicPartition partition, String bootstrapServers) {
-        ServiceContext serviceContext = getServiceContext(bootstrapServers);
-        serviceContext.setName("[PartitionPaused][KafkaConsumer] " + partition.topic() + "-" + partition.partition());
-        naiveServiceAlarm.onCrashed(serviceContext);
     }
 
     protected ServiceContext getServiceContext(String bootstrapServers) {
         ServiceContext serviceContext = new ServiceContext();
-        serviceContext.setName("KafkaConsumer");
         serviceContext.setHost(host);
         serviceContext.setProject(project);
         serviceContext.setRemoteHost(bootstrapServers);

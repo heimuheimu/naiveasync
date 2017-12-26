@@ -24,8 +24,6 @@
 
 package com.heimuheimu.naiveasync.kafka.consumer;
 
-import org.apache.kafka.common.TopicPartition;
-
 /**
  * Kafka 消费者事件监听器骨架类，可防止 {@link KafkaConsumerListener} 在后续版本增加监听事件时，带来的编译错误。
  *
@@ -36,32 +34,12 @@ import org.apache.kafka.common.TopicPartition;
 public abstract class KafkaConsumerListenerSkeleton implements KafkaConsumerListener {
 
     @Override
-    public void onPollFailed(String bootstrapServers) {
+    public void onError(String errorMessage, String groupId, String bootstrapServers) {
         //do nothing
     }
 
     @Override
-    public void onPollRecovered(String bootstrapServers) {
-        //do nothing
-    }
-
-    @Override
-    public void onConsumeFailed(TopicPartition partition, Object message, String bootstrapServers) {
-        //do nothing
-    }
-
-    @Override
-    public void onCommitSyncFailed(TopicPartition partition, String bootstrapServers) {
-        //do nothing
-    }
-
-    @Override
-    public void onCommitSyncRecovered(TopicPartition partition, String bootstrapServers) {
-        //do nothing
-    }
-
-    @Override
-    public void onPartitionPaused(TopicPartition partition, String bootstrapServers) {
+    public void onRecover(String groupId, String bootstrapServers) {
         //do nothing
     }
 }
