@@ -70,11 +70,6 @@ public class KafkaConsumerManager implements Closeable {
     private final KafkaConsumerConfig config;
 
     /**
-     * 同一条消息最大连续消费失败次数
-     */
-    private final int maxConsumeRetryTimes;
-
-    /**
      * Kafka 消费者事件监听器
      */
     private final KafkaConsumerListener listener;
@@ -104,14 +99,13 @@ public class KafkaConsumerManager implements Closeable {
      *
      * @param consumers 消费者列表，不允许为 {@code null} 或空列表
      * @param kafkaConsumerConfig Kafka 消费者配置信息，不允许为 {@code null}
-     * @param maxConsumeRetryTimes 同一条消息最大连续消费失败次数，不允许小于 0
      * @param kafkaConsumerListener Kafka 消费者事件监听器，允许为 {@code null}
      * @throws IllegalArgumentException 如果消费者列表为 {@code null} 或空列表，将抛出此异常
      * @throws IllegalArgumentException 如果 Kafka 消费者配置信息为 {@code null}，将抛出此异常
      * @throws IllegalArgumentException 如果同一条消息最大连续消费失败次数小于 0，将抛出此异常
      */
     public KafkaConsumerManager(List<AsyncMessageConsumer<?>> consumers, KafkaConsumerConfig kafkaConsumerConfig,
-            int maxConsumeRetryTimes, KafkaConsumerListener kafkaConsumerListener) throws IllegalArgumentException {
+            KafkaConsumerListener kafkaConsumerListener) throws IllegalArgumentException {
         if (consumers == null || consumers.isEmpty()) {
             LOGGER.error("Create KafkaConsumerManager failed: `consumers could not be null or empty`. Consumers: `"
                     + consumers + "`. KafkaConsumerConfig: `" + kafkaConsumerConfig + "`. KafkaConsumerListener: `"
@@ -140,7 +134,6 @@ public class KafkaConsumerManager implements Closeable {
         }
         this.config = kafkaConsumerConfig;
         this.listener = new KafkaConsumerListenerWrapper(kafkaConsumerListener);
-        this.maxConsumeRetryTimes = maxConsumeRetryTimes;
         this.transcoder = new SimpleMessageTranscoder();
         this.monitor = AsyncMessageConsumerMonitorFactory.get();
     }
@@ -208,7 +201,6 @@ public class KafkaConsumerManager implements Closeable {
         return "KafkaConsumerManager{" +
                 "consumerMap=" + consumerMap +
                 ", config=" + config +
-                ", maxConsumeRetryTimes=" + maxConsumeRetryTimes +
                 ", listener=" + listener +
                 ", state=" + state +
                 '}';
