@@ -309,6 +309,7 @@ public class KafkaConsumerManager implements Closeable {
                                         onError("commit sync failed", true);
                                         continue consumeWhile;
                                     }
+                                    monitor.onSuccessConsumed(topic, messageList.size());
                                 } else {
                                     for (int i = 0; i < messageList.size(); i++) {
                                         Object message = messageList.get(i);
@@ -332,6 +333,7 @@ public class KafkaConsumerManager implements Closeable {
                                             onError("commit sync failed", true);
                                             continue consumeWhile;
                                         }
+                                        monitor.onSuccessConsumed(topic, 1);
                                     }
                                 }
                             }
