@@ -133,7 +133,7 @@ public class AsyncMessageConsumerDataCollector extends AbstractFalconDataCollect
             long lastSpecificDelayedMills = lastDelayedMillsMap.containsKey(messageType) ? lastDelayedMillsMap.get(messageType) : 0;
             long specificDelayedMills = totalSpecificDelayedMills - lastSpecificDelayedMills;
             double avgSpecificDelayedMills = specificPolledCount == 0 ? 0 : (double) specificDelayedMills / specificPolledCount;
-            falconDataList.add(create("_" + messageTypeMetric + "_avg_delay", specificPolledCount));
+            falconDataList.add(create("_" + messageTypeMetric + "_avg_delay", avgSpecificDelayedMills));
             lastDelayedMillsMap.put(messageType, totalSpecificDelayedMills);
 
             falconDataList.add(create("_" + messageTypeMetric + "_max_delay", monitor.getSpecificMaxDelayedMills(messageType)));
