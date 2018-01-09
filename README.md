@@ -43,15 +43,14 @@ log4j.appender.NAIVEASYNC.layout.ConversionPattern=%d{ISO8601} %-5p [%F:%L] : %m
         <constructor-arg index="1" ref="notifierList" /> <!-- 报警器列表，关于报警器的信息可查看 naivemonitor 项目 -->
     </bean>
     
-    <!-- Kafka 消费者列表，消费者为 com.heimuheimu.naiveasync.consumer.AsyncMessageConsumer<T> 的实现类 -->
-    <util:list id="kafkaAsyncConsumerList">
-        <bean class="com.heimuheimu.naiveasync.demo.consumer.DemoMessageConsumer" />
-    </util:list>
-    
     <!-- Kafka 消费者管理器 -->
     <bean id="kafkaAsyncMessageConsumerManager" class="com.heimuheimu.naiveasync.kafka.consumer.KafkaConsumerManager"
     		  init-method="init" destroy-method="close">
-        <constructor-arg index="0" ref="kafkaAsyncConsumerList" />
+        <constructor-arg index="0"> <!-- Kafka 消费者列表，消费者为 com.heimuheimu.naiveasync.consumer.AsyncMessageConsumer<T> 的实现类 -->
+            <util:list>
+                <bean class="com.heimuheimu.naiveasync.demo.consumer.DemoMessageConsumer" />
+            </util:list>
+        </constructor-arg>
         <constructor-arg index="1" ref="kafkaConsumerConfig" />
         <constructor-arg index="2" ref="kafkaConsumerListener" />
     </bean>
@@ -124,7 +123,12 @@ log4j.appender.NAIVE_ASYNC_CONSUMER_ERROR_LOG.layout.ConversionPattern=%d{ISO860
 #### 单条消息消费者
 ```java
     public class DemoMessageConsumer extends AbstractMessageConsumer<DemoMessage> {
-    
+        
+        @Override
+        public Class<DemoMessage> getMessageClass() {
+            return DemoMessage.class;
+        }
+        
         @Override
         public void consume(DemoMessage demoMessage) {
             // 进行单条消息的消费，如果抛出异常，在等待 X 秒后，消息将会再次进行推送。
@@ -134,7 +138,12 @@ log4j.appender.NAIVE_ASYNC_CONSUMER_ERROR_LOG.layout.ConversionPattern=%d{ISO860
 
 #### 批量消息消费者
 ```java
-    public class DemoMessageConsumer extends AbstractBatchMessageConsumer<DemoMessage> {
+    public class DemoMessageBatchConsumer extends AbstractBatchMessageConsumer<DemoMessage> {
+        
+        @Override
+        public Class<DemoMessage> getMessageClass() {
+            return DemoMessage.class;
+        }    
     
         @Override
         public void consume(List<DemoMessage> messageList) {
