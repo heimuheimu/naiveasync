@@ -30,11 +30,13 @@ import com.heimuheimu.naivemonitor.falcon.FalconData;
 import com.heimuheimu.naivemonitor.falcon.support.AbstractFalconDataCollector;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 异步消息生产者监控信息采集器
+ * 异步消息生产者监控信息采集器。
  *
  * @author heimuheimu
  */
@@ -48,31 +50,25 @@ public class AsyncMessageProducerDataCollector extends AbstractFalconDataCollect
 
     private final ConcurrentHashMap<String, Long> lastErrorCountMap = new ConcurrentHashMap<>();
 
-    private final String[] messageTypes;
+    private final Map<String, String> messageTypeMap;
 
     /**
-     * 构造一个异步消息生产者监控信息采集器
+     * 构造一个异步消息生产者监控信息采集器。
      */
     public AsyncMessageProducerDataCollector() {
-        this(new String[0]);
+        this(null);
     }
 
     /**
-     * 构造一个异步消息生产者监控信息采集器，并会额外上报指定消息类型的成功发送次数
+     * 构造一个异步消息生产者监控信息采集器，并会额外上报指定消息类型的监控数据。
      *
-     * @param messageTypes 需额外上报的消息类型，以 "," 进行分割
+     * @param messageTypeMap messageTypeMap 需额外上报的消息类型 Map，Key 为消息类型，Value 为该消息类型对应的 Metric 名称
      */
-    public AsyncMessageProducerDataCollector(String messageTypes) {
-        this(messageTypes.split(","));
-    }
-
-    /**
-     * 构造一个异步消息生产者监控信息采集器，并会额外上报指定消息类型的成功发送次数
-     *
-     * @param messageTypes 需额外上报的消息类型数组
-     */
-    public AsyncMessageProducerDataCollector(String[] messageTypes) {
-        this.messageTypes = messageTypes;
+    public AsyncMessageProducerDataCollector(Map<String, String> messageTypeMap) {
+        if (messageTypeMap == null) {
+            messageTypeMap = new HashMap<>();
+        }
+        this.messageTypeMap = messageTypeMap;
     }
 
     @Override
@@ -104,18 +100,18 @@ public class AsyncMessageProducerDataCollector extends AbstractFalconDataCollect
         falconDataList.add(create("_error", totalErrorCount - lastTotalErrorCount));
         lastTotalErrorCount = totalErrorCount;
 
-        if (messageTypes != null && messageTypes.length > 0) {
-            for (String messageType : messageTypes) {
-                long successCount = monitor.getSuccessCount(messageType);
-                long lastSuccessCount = lastSuccessCountMap.containsKey(messageType) ? lastSuccessCountMap.get(messageType) : 0;
-                falconDataList.add(create("_" + messageType + "_success", successCount - lastSuccessCount));
-                lastSuccessCountMap.put(messageType, successCount);
+        for (String messageType : messageTypeMap.keySet()) {
+            String messageTypeMetric = messageTypeMap.get(messageType);
 
-                long errorCount = monitor.getErrorCount(messageType);
-                long lastErrorCount = lastErrorCountMap.containsKey(messageType) ? lastErrorCountMap.get(messageType) : 0;
-                falconDataList.add(create("_" + messageType + "_error", errorCount - lastErrorCount));
-                lastErrorCountMap.put(messageType, errorCount);
-            }
+            long successCount = monitor.getSuccessCount(messageType);
+            long lastSuccessCount = lastSuccessCountMap.containsKey(messageType) ? lastSuccessCountMap.get(messageType) : 0;
+            falconDataList.add(create("_" + messageTypeMetric + "_success", successCount - lastSuccessCount));
+            lastSuccessCountMap.put(messageType, successCount);
+
+            long errorCount = monitor.getErrorCount(messageType);
+            long lastErrorCount = lastErrorCountMap.containsKey(messageType) ? lastErrorCountMap.get(messageType) : 0;
+            falconDataList.add(create("_" + messageTypeMetric + "_error", errorCount - lastErrorCount));
+            lastErrorCountMap.put(messageType, errorCount);
         }
 
         return falconDataList;

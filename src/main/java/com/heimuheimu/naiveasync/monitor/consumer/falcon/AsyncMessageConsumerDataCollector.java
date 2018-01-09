@@ -68,7 +68,7 @@ public class AsyncMessageConsumerDataCollector extends AbstractFalconDataCollect
     /**
      * 构造一个异步消息消费者监控数据采集器，并会额外上报指定消息类型的监控数据。
      *
-     * @param messageTypeMap 需额外上报的消息类型 Map，Key 为消息类型，Value 为该消息类型对应的 Metric 名称。
+     * @param messageTypeMap 需额外上报的消息类型 Map，Key 为消息类型，Value 为该消息类型对应的 Metric 名称
      */
     public AsyncMessageConsumerDataCollector(Map<String, String> messageTypeMap) {
         if (messageTypeMap == null) {
