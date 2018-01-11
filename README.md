@@ -12,7 +12,7 @@
     <dependency>
         <groupId>com.heimuheimu</groupId>
         <artifactId>naiveasync</artifactId>
-        <version>1.3-SNAPSHOT</version>
+        <version>1.0</version>
     </dependency>
 ```
 
