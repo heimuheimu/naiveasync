@@ -1,17 +1,18 @@
 # NaiveAsync: 对 Kafka 生产者和消费者进行封装，提供实时报警和数据监控功能。
 
-## Maven 依赖配置
+## 使用要求
+* JDK 版本：1.8+ 
+* 依赖类库：
+  * [slf4j-log4j12 1.7.5+](https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12)
+  * [naivemonitor 1.0+](https://github.com/heimuheimu/naivemonitor)
+  * [kafka-clients 0.10.0.0+](https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients)
+
+## Maven 配置
 ```xml
     <dependency>
         <groupId>com.heimuheimu</groupId>
         <artifactId>naiveasync</artifactId>
         <version>1.3-SNAPSHOT</version>
-    </dependency>
-  
-    <dependency>
-        <groupId>org.apache.kafka</groupId>
-        <artifactId>kafka-clients</artifactId>
-        <version>0.11.0.0</version> <!-- 请选择与 Kafka 版本一致的客户端-->
     </dependency>
 ```
 
@@ -193,13 +194,13 @@ log4j.appender.NAIVE_ASYNC_CONSUMER_INFO_LOG.layout.ConversionPattern=%d{ISO8601
 
 ### Falcon 上报数据项说明（上报周期：30秒）
 
-* naiveasync_producer_success/module=naiveasync 周期内发送成功的消息总数
-* naiveasync_producer_error/module=naiveasync 周期内发送失败的消息总数
+* naiveasync_producer_success/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内发送成功的消息总数
+* naiveasync_producer_error/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内发送失败的消息总数
 
   **如果配置了具体消息类型的上报，将会有以下数据项：**
 
-* naiveasync_producer_{messageType}_success/module=naiveasync 周期内该类型消息发送成功的总数
-* naiveasync_producer_{messageType}_error/module=naiveasync 周期内该类型消息已消费成功的总数
+* naiveasync_producer_{messageType}_success/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内该类型消息发送成功的总数
+* naiveasync_producer_{messageType}_error/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内该类型消息已消费成功的总数
 
 ### 生产者示例代码
 ```java
@@ -209,7 +210,7 @@ public class UserService {
     @Autowired
     private AsyncMessageProducer asyncMessageProducer;
     
-    public void add(User user) {
+    public void add(User user) { //注意：发送的消息必须是可序列化的（实现 Serializable 接口）
         // balabalabala... 执行添加用户的业务逻辑
         
         asyncMessageProducer.send(user); //发送 User 消息至 Kafka 中，该方法不会抛出任何异常
@@ -218,11 +219,5 @@ public class UserService {
 ```
 
 ## 更多信息
-
-* JDK 版本：1.8+
-* 需要依赖的类库：
-  * naivemonitor 1.0+
-  * slf4j-log4j12 1.7.5+
-  * kafka-clients 0.10.0.0+
-* 更多 Kafka 信息：[Kafka 官方文档](http://kafka.apache.org/documentation/)
-* 更多 NaiveMonitor 信息： [NaiveMonitor 项目 GitHub 地址](https://github.com/heimuheimu/naivemonitor)
+* [Kafka 官方文档](http://kafka.apache.org/documentation/)
+* [NaiveMonitor 项目主页](https://github.com/heimuheimu/naivemonitor)

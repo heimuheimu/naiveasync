@@ -36,7 +36,17 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 异步消息生产者监控信息采集器。
+ * 异步消息生产者监控信息采集器。该采集器将会返回以下数据项：
+ * <ul>
+ *     <li>naiveasync_producer_success/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内发送成功的消息总数</li>
+ *     <li>naiveasync_producer_error/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内发送失败的消息总数</li>
+ * </ul>
+ *
+ * 如果配置了具体消息类型的上报，将会有以下数据项：
+ * <ul>
+ *     <li>naiveasync_producer_{messageType}_success/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内该类型消息发送成功的总数</li>
+ *     <li>naiveasync_producer_{messageType}_error/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内该类型消息已消费成功的总数</li>
+ * </ul>
  *
  * @author heimuheimu
  */
