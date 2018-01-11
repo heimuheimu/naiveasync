@@ -144,6 +144,11 @@ log4j.appender.NAIVE_ASYNC_CONSUMER_INFO_LOG.layout.ConversionPattern=%d{ISO8601
     }
 ```
 
+[KafkaConsumerManager](https://github.com/heimuheimu/naiveasync/blob/master/src/main/java/com/heimuheimu/naiveasync/kafka/consumer/KafkaConsumerManager.java) 会为每个消费者
+实例分配一个线程，如果需要分配多个线程，可继承 [AbstractKafkaMessageConsumer](https://github.com/heimuheimu/naiveasync/blob/master/src/main/java/com/heimuheimu/naiveasync/kafka/consumer/AbstractKafkaMessageConsumer.java) 或
+[AbstractKafkaBatchMessageConsumer](https://github.com/heimuheimu/naiveasync/blob/master/src/main/java/com/heimuheimu/naiveasync/kafka/consumer/AbstractKafkaBatchMessageConsumer.java) 来指定线程数量。
+
+
 ## Kafka 生产者
 
 ### Spring 配置
