@@ -39,7 +39,7 @@
                         </manifest>
                         <manifestEntries>
                             <Built-By>heimuheimu</Built-By>
-                            <url>https://github.com/heimuheimu/naivemonitor</url>
+                            <url>https://github.com/heimuheimu/naiveasync</url>
                         </manifestEntries>
                     </archive>
                 </configuration>
