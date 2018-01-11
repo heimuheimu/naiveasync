@@ -22,26 +22,9 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.naiveasync.kafka;
-
 /**
- * Kafka 工具类。
+ * 提供 NaiveAsync 项目使用的常量类。
  *
  * @author heimuheimu
  */
-public class KafkaUtil {
-
-    private KafkaUtil() {
-        //prevent construct this class
-    }
-
-    /**
-     * 根据异步消息 {@code Class} 对象获得 Kafka 中对应的 topic 名称
-     *
-     * @param messageClass 异步消息 {@code Class} 对象
-     * @return Kafka 中对应的 topic 名称
-     */
-    public static String getTopicName(Class<?> messageClass) {
-        return messageClass.getName();
-    }
-}
+package com.heimuheimu.naiveasync.constant;

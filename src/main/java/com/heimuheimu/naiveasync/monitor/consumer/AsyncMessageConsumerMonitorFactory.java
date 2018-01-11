@@ -25,7 +25,7 @@
 package com.heimuheimu.naiveasync.monitor.consumer;
 
 /**
- * 异步消息消费者监控器工厂
+ * 异步消息消费者监控器工厂。
  *
  * @author heimuheimu
  */
@@ -38,7 +38,7 @@ public class AsyncMessageConsumerMonitorFactory {
     }
 
     /**
-     * 获得异步消息消费者监控器
+     * 获得异步消息消费者监控器。
      *
      * @return 异步消息消费者监控器
      */

@@ -22,19 +22,26 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.naiveasync.transcoder;
+package com.heimuheimu.naiveasync.kafka.util;
 
 /**
- * 如果消息与字节数组转换过程中发生错误，将抛出此异常信息。
+ * Kafka 工具类。
  *
- * @see MessageTranscoder
  * @author heimuheimu
  */
-public class TranscoderException extends RuntimeException {
+public class KafkaUtil {
 
-    private static final long serialVersionUID = 7971783118377431358L;
+    private KafkaUtil() {
+        //prevent construct this class
+    }
 
-    public TranscoderException(String message, Throwable cause) {
-        super(message, cause);
+    /**
+     * 根据异步消息 {@code Class} 对象获得 Kafka 中对应的 topic 名称。
+     *
+     * @param messageClass 异步消息 {@code Class} 对象
+     * @return Kafka 中对应的 topic 名称
+     */
+    public static String getTopicName(Class<?> messageClass) {
+        return messageClass.getName();
     }
 }

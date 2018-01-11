@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * 异步消息生产者监控器
+ * 异步消息生产者监控器。
  *
  * @author heimuheimu
  */
@@ -55,7 +55,7 @@ public class AsyncMessageProducerMonitor {
     private final ConcurrentHashMap<String, AtomicLong> errorCountMap = new ConcurrentHashMap<>();
 
     /**
-     * 对发送成功的消息进行监控
+     * 对发送成功的消息进行监控。
      *
      * @param messageType 消息类型
      */
@@ -70,7 +70,7 @@ public class AsyncMessageProducerMonitor {
     }
 
     /**
-     * 对发送失败的消息进行监控
+     * 对发送失败的消息进行监控。
      *
      * @param messageType 消息类型
      */
@@ -85,7 +85,7 @@ public class AsyncMessageProducerMonitor {
     }
 
     /**
-     * 获得消息累计发送成功次数
+     * 获得消息累计发送成功次数。
      *
      * @return 消息累计发送成功次数
      */
@@ -94,7 +94,7 @@ public class AsyncMessageProducerMonitor {
     }
 
     /**
-     * 获得消息累计发送失败次数
+     * 获得消息累计发送失败次数。
      *
      * @return 消息累计发送失败次数
      */
@@ -103,7 +103,7 @@ public class AsyncMessageProducerMonitor {
     }
 
     /**
-     * 获得指定消息类型的累计发送成功次数
+     * 获得指定消息类型的累计发送成功次数。
      *
      * @param messageType 消息类型
      * @return 指定消息类型的累计发送成功次数
@@ -118,7 +118,7 @@ public class AsyncMessageProducerMonitor {
     }
 
     /**
-     * 获得指定消息类型的累计发送失败次数
+     * 获得指定消息类型的累计发送失败次数。
      *
      * @param messageType 消息类型
      * @return 指定消息类型的累计发送失败次数

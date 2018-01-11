@@ -22,19 +22,27 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.naiveasync.transcoder;
+package com.heimuheimu.naiveasync.constant;
 
 /**
- * 如果消息与字节数组转换过程中发生错误，将抛出此异常信息。
+ * Bean 状态枚举类。
  *
- * @see MessageTranscoder
  * @author heimuheimu
  */
-public class TranscoderException extends RuntimeException {
+public enum BeanStatusEnum {
 
-    private static final long serialVersionUID = 7971783118377431358L;
+    /**
+     * 尚未初始化
+     */
+    UNINITIALIZED,
 
-    public TranscoderException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    /**
+     * 正常
+     */
+    NORMAL,
+
+    /**
+     * 已关闭
+     */
+    CLOSED
 }

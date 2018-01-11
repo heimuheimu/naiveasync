@@ -24,10 +24,10 @@
 
 package com.heimuheimu.naiveasync.kafka.producer;
 
-import com.heimuheimu.naivemonitor.MonitorUtil;
 import com.heimuheimu.naivemonitor.alarm.NaiveServiceAlarm;
 import com.heimuheimu.naivemonitor.alarm.ServiceAlarmMessageNotifier;
 import com.heimuheimu.naivemonitor.alarm.ServiceContext;
+import com.heimuheimu.naivemonitor.util.MonitorUtil;
 
 import java.util.List;
 import java.util.Map;
@@ -37,8 +37,8 @@ import java.util.Map;
  *
  * <p><strong>说明：</strong>{@code NoticeableKafkaProducerListener} 类是线程安全的，可在多个线程中使用同一个实例。</p>
  *
- * @author heimuheimu
  * @see NaiveServiceAlarm
+ * @author heimuheimu
  */
 public class NoticeableKafkaProducerListener extends KafkaProducerListenerSkeleton {
 

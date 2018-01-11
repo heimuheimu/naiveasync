@@ -24,7 +24,7 @@
 
 package com.heimuheimu.naiveasync.kafka.producer;
 
-import com.heimuheimu.naiveasync.kafka.KafkaUtil;
+import com.heimuheimu.naiveasync.kafka.util.KafkaUtil;
 import com.heimuheimu.naiveasync.monitor.producer.AsyncMessageProducerMonitor;
 import com.heimuheimu.naiveasync.monitor.producer.AsyncMessageProducerMonitorFactory;
 import com.heimuheimu.naiveasync.producer.AsyncMessageProducer;

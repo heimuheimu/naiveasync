@@ -84,18 +84,18 @@ log4j.appender.NAIVEASYNC.layout.ConversionPattern=%d{ISO8601} %-5p [%F:%L] : %m
 
 ### Falcon 上报数据项说明（上报周期：30秒）
 
-* naiveasync_consumer_polled/module=naiveasync 周期内已拉取的消息总数
-* naiveasync_consumer_success/module=naiveasync 周期内已消费成功的消息总数
-* naiveasync_consumer_max_delay/module=naiveasync 周期内消息到达最大延迟时间（消息延迟时间 = 消息拉取时间 - 消息发送时间），单位：毫秒
-* naiveasync_consumer_avg_delay/module=naiveasync 周期内消息到达平均延迟时间（消息延迟时间 = 消息拉取时间 - 消息发送时间），单位：毫秒
-* naiveasync_consumer_exec_error/module=naiveasync 周期内消费出错次数，包含 Kafka 操作出现的错误和消费过程中出现的错误。
+ * naiveasync_consumer_polled/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内已拉取的消息总数
+ * naiveasync_consumer_success/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内已消费成功的消息总数
+ * naiveasync_consumer_max_delay/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内消息到达最大延迟时间（消息延迟时间 = 消息拉取时间 - 消息发送时间），单位：毫秒
+ * naiveasync_consumer_avg_delay/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内消息到达平均延迟时间（消息延迟时间 = 消息拉取时间 - 消息发送时间），单位：毫秒
+ * naiveasync_consumer_exec_error/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内消费出错次数，包含 Kafka 操作出现的错误和消费过程中出现的错误
 
   **如果配置了具体消息类型的上报，将会有以下数据项：**
 
-* naiveasync_consumer_{messageType}_polled/module=naiveasync 周期内该类型消息已拉取的总数
-* naiveasync_consumer_{messageType}_success/module=naiveasync 周期内该类型消息已消费成功的总数
-* naiveasync_consumer_{messageType}_max_delay/module=naiveasync 周期内该类型消息到达最大延迟时间，单位：毫秒
-* naiveasync_consumer_{messageType}_avg_delay/module=naiveasync 周期内该类型消息到达平均延迟时间，单位：毫秒
+* naiveasync_consumer_{messageType}_polled/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内该类型消息已拉取的总数
+* naiveasync_consumer_{messageType}_success/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内该类型消息已消费成功的总数
+* naiveasync_consumer_{messageType}_max_delay/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内该类型消息到达最大延迟时间，单位：毫秒
+* naiveasync_consumer_{messageType}_avg_delay/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内该类型消息到达平均延迟时间，单位：毫秒
 
 ### 消费者 Log4j 配置
 ```
@@ -107,15 +107,6 @@ log4j.appender.NAIVE_ASYNC_CONSUMER_INFO_LOG.encoding=UTF-8
 log4j.appender.NAIVE_ASYNC_CONSUMER_INFO_LOG.DatePattern=_yyyy-MM-dd
 log4j.appender.NAIVE_ASYNC_CONSUMER_INFO_LOG.layout=org.apache.log4j.PatternLayout
 log4j.appender.NAIVE_ASYNC_CONSUMER_INFO_LOG.layout.ConversionPattern=%d{ISO8601} %-5p : %m%n
-
-log4j.logger.NAIVE_ASYNC_CONSUMER_ERROR_LOG=INFO, NAIVE_ASYNC_CONSUMER_ERROR_LOG
-log4j.additivity.NAIVE_ASYNC_CONSUMER_ERROR_LOG=false
-log4j.appender.NAIVE_ASYNC_CONSUMER_ERROR_LOG=org.apache.log4j.DailyRollingFileAppender
-log4j.appender.NAIVE_ASYNC_CONSUMER_ERROR_LOG.file=${log.output.directory}/naiveasync/consumer_error.log
-log4j.appender.NAIVE_ASYNC_CONSUMER_ERROR_LOG.encoding=UTF-8
-log4j.appender.NAIVE_ASYNC_CONSUMER_ERROR_LOG.DatePattern=_yyyy-MM-dd
-log4j.appender.NAIVE_ASYNC_CONSUMER_ERROR_LOG.layout=org.apache.log4j.PatternLayout
-log4j.appender.NAIVE_ASYNC_CONSUMER_ERROR_LOG.layout.ConversionPattern=%d{ISO8601} %-5p : %m%n
 ```
 
 ### 消费者示例代码
@@ -195,7 +186,7 @@ log4j.appender.NAIVE_ASYNC_CONSUMER_ERROR_LOG.layout.ConversionPattern=%d{ISO860
     
     <!-- Falcon 监控数据上报器 -->
     <bean id="falconReporter" class="com.heimuheimu.naivemonitor.falcon.FalconReporter" init-method="init" destroy-method="close">
-        <constructor-arg index="0" value="http://127.0.0.1:1988/v1/push" /> <!-- Falocn 监控数据推送地址-->
+        <constructor-arg index="0" value="http://127.0.0.1:1988/v1/push" /> <!-- Falcon 监控数据推送地址-->
         <constructor-arg index="1" ref="falconDataCollectorList" />
     </bean>
 ```

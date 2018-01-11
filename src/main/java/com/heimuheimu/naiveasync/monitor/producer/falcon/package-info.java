@@ -22,28 +22,9 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.naiveasync;
-
 /**
- * Bean状态枚举类
+ * 提供异步消息生产者 Falcon 监控数据采集器。
  *
  * @author heimuheimu
  */
-public enum BeanStatusEnum {
-
-    /**
-     * 尚未初始化
-     */
-    UNINITIALIZED,
-
-    /**
-     * 正常
-     */
-    NORMAL,
-
-    /**
-     * 已关闭
-     */
-    CLOSED
-
-}
+package com.heimuheimu.naiveasync.monitor.producer.falcon;

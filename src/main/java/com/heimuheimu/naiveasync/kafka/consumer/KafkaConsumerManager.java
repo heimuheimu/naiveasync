@@ -24,9 +24,9 @@
 
 package com.heimuheimu.naiveasync.kafka.consumer;
 
-import com.heimuheimu.naiveasync.BeanStatusEnum;
+import com.heimuheimu.naiveasync.constant.BeanStatusEnum;
 import com.heimuheimu.naiveasync.consumer.AsyncMessageConsumer;
-import com.heimuheimu.naiveasync.kafka.KafkaUtil;
+import com.heimuheimu.naiveasync.kafka.util.KafkaUtil;
 import com.heimuheimu.naiveasync.monitor.consumer.AsyncMessageConsumerMonitor;
 import com.heimuheimu.naiveasync.monitor.consumer.AsyncMessageConsumerMonitorFactory;
 import com.heimuheimu.naiveasync.transcoder.MessageTranscoder;
@@ -41,17 +41,28 @@ import java.io.Closeable;
 import java.util.*;
 
 /**
- * 基于 Kafka 框架实现的消费者管理器，更多 Kafka 信息请参考：<a href="http://kafka.apache.org/documentation/">http://kafka.apache.org/documentation/</a>。
+ * 基于 Kafka 框架实现的消费者管理器。
  *
- * <p>
- *     {@code KafkaConsumerManager} 实例应调用 {@link #init()} 方法，初始化成功后才可使用。
- *     当 {@code KafkaConsumerManager} 不再使用时，应调用 {@link #close()} 方法进行资源释放。
- * </p>
+ * <h3>Kafka 消费者 Log4j 配置</h3>
+ * <blockquote>
+ * <pre>
+ * log4j.logger.NAIVE_ASYNC_CONSUMER_INFO_LOG=INFO, NAIVE_ASYNC_CONSUMER_INFO_LOG
+ * log4j.additivity.NAIVE_ASYNC_CONSUMER_INFO_LOG=false
+ * log4j.appender.NAIVE_ASYNC_CONSUMER_INFO_LOG=org.apache.log4j.DailyRollingFileAppender
+ * log4j.appender.NAIVE_ASYNC_CONSUMER_INFO_LOG.file=${log.output.directory}/naiveasync/consumer_info.log
+ * log4j.appender.NAIVE_ASYNC_CONSUMER_INFO_LOG.encoding=UTF-8
+ * log4j.appender.NAIVE_ASYNC_CONSUMER_INFO_LOG.DatePattern=_yyyy-MM-dd
+ * log4j.appender.NAIVE_ASYNC_CONSUMER_INFO_LOG.layout=org.apache.log4j.PatternLayout
+ * log4j.appender.NAIVE_ASYNC_CONSUMER_INFO_LOG.layout.ConversionPattern=%d{ISO8601} %-5p : %m%n
+ * </pre>
+ * </blockquote>
  *
  * <p><strong>说明：</strong>{@code KafkaConsumerManager} 类是线程安全的，可在多个线程中使用同一个实例。</p>
  *
- * @author heimuheimu
+ * <p>更多 Kafka 信息请参考：<a href="http://kafka.apache.org/documentation/">http://kafka.apache.org/documentation/</a>。</p>
+ *
  * @see AsyncMessageConsumer
+ * @author heimuheimu
  */
 public class KafkaConsumerManager implements Closeable {
 
@@ -207,7 +218,7 @@ public class KafkaConsumerManager implements Closeable {
     }
 
     /**
-     * Kafka 消费者线程
+     * Kafka 消费者线程。
      */
     private class KafkaConsumeThread extends Thread {
 

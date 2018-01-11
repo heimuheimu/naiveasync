@@ -22,19 +22,9 @@
  * SOFTWARE.
  */
 
-package com.heimuheimu.naiveasync.transcoder;
-
 /**
- * 如果消息与字节数组转换过程中发生错误，将抛出此异常信息。
+ * 提供 Kafka 生产者或消费者需要使用的工具类。
  *
- * @see MessageTranscoder
  * @author heimuheimu
  */
-public class TranscoderException extends RuntimeException {
-
-    private static final long serialVersionUID = 7971783118377431358L;
-
-    public TranscoderException(String message, Throwable cause) {
-        super(message, cause);
-    }
-}
+package com.heimuheimu.naiveasync.kafka.util;

@@ -36,7 +36,21 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 异步消息消费者监控数据采集器。
+ * 异步消息消费者 Falcon 监控数据采集器。该采集器将会返回以下数据项：
+ * <ul>
+ *     <li>naiveasync_consumer_polled/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内已拉取的消息总数</li>
+ *     <li>naiveasync_consumer_success/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内已消费成功的消息总数</li>
+ *     <li>naiveasync_consumer_max_delay/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内消息到达最大延迟时间（消息延迟时间 = 消息拉取时间 - 消息发送时间），单位：毫秒</li>
+ *     <li>naiveasync_consumer_avg_delay/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内消息到达平均延迟时间（消息延迟时间 = 消息拉取时间 - 消息发送时间），单位：毫秒</li>
+ *     <li>naiveasync_consumer_exec_error/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内消费出错次数，包含 Kafka 操作出现的错误和消费过程中出现的错误</li>
+ * </ul>
+ * 如果配置了具体消息类型的上报，将会有以下数据项：
+ * <ul>
+ *     <li>naiveasync_consumer_{messageType}_polled/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内该类型消息已拉取的总数</li>
+ *     <li>naiveasync_consumer_{messageType}_success/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内该类型消息已消费成功的总数</li>
+ *     <li>naiveasync_consumer_{messageType}_max_delay/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内该类型消息到达最大延迟时间，单位：毫秒</li>
+ *     <li>naiveasync_consumer_{messageType}_avg_delay/module=naiveasync &nbsp;&nbsp;&nbsp;&nbsp; 30 秒内该类型消息到达平均延迟时间，单位：毫秒</li>
+ * </ul>
  *
  * @author heimuheimu
  */

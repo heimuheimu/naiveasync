@@ -24,21 +24,21 @@
 
 package com.heimuheimu.naiveasync.kafka.consumer;
 
-import com.heimuheimu.naivemonitor.MonitorUtil;
 import com.heimuheimu.naivemonitor.alarm.NaiveServiceAlarm;
 import com.heimuheimu.naivemonitor.alarm.ServiceAlarmMessageNotifier;
 import com.heimuheimu.naivemonitor.alarm.ServiceContext;
+import com.heimuheimu.naivemonitor.util.MonitorUtil;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * {@code NoticeableKafkaConsumerListener} 监听 {@link KafkaConsumerManager} 在消费过程中出现的异常事件，通过报警消息通知器进行实时通知。
+ * {@code NoticeableKafkaConsumerListener} 监听 {@link KafkaConsumerManager} 在 Kafka 消费者执行出现错误时，通过报警消息通知器进行实时通知。
  *
  * <p><strong>说明：</strong>{@code NoticeableKafkaConsumerListener} 类是线程安全的，可在多个线程中使用同一个实例。</p>
  *
- * @author heimuheimu
  * @see NaiveServiceAlarm
+ * @author heimuheimu
  */
 public class NoticeableKafkaConsumerListener extends KafkaConsumerListenerSkeleton {
 
