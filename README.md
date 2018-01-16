@@ -78,7 +78,7 @@ log4j.appender.NAIVEASYNC.layout.ConversionPattern=%d{ISO8601} %-5p [%F:%L] : %m
     
     <!-- Falcon 监控数据上报器 -->
     <bean id="falconReporter" class="com.heimuheimu.naivemonitor.falcon.FalconReporter" init-method="init" destroy-method="close">
-        <constructor-arg index="0" value="http://127.0.0.1:1988/v1/push" /> <!-- Falocn 监控数据推送地址-->
+        <constructor-arg index="0" value="http://127.0.0.1:1988/v1/push" /> <!-- Falcon 监控数据推送地址-->
         <constructor-arg index="1" ref="falconDataCollectorList" />
     </bean>
 ```
