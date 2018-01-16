@@ -226,3 +226,6 @@ public class UserService {
 ## 更多信息
 * [Kafka 官方文档](http://kafka.apache.org/documentation/)
 * [NaiveMonitor 项目主页](https://github.com/heimuheimu/naivemonitor)
+* [NaiveAsync v1.0 API Doc](https://heimuheimu.github.io/naiveasync/api/v1.0/)
+* [NaiveAsync v1.0 源码下载](https://heimuheimu.github.io/naiveasync/download/naiveasync-1.0-sources.jar)
+* [NaiveAsync v1.0 Jar包下载](https://heimuheimu.github.io/naiveasync/download/naiveasync-1.0.jar)
