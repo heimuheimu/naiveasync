@@ -12,7 +12,7 @@
     <dependency>
         <groupId>com.heimuheimu</groupId>
         <artifactId>naiveasync</artifactId>
-        <version>1.0</version>
+        <version>1.1</version>
     </dependency>
 ```
 
@@ -223,9 +223,25 @@ public class UserService {
 }
 ```
 
+## 版本发布记录
+### V1.1
+### BUG 修复：
+ * 程序关闭时，出现 interrupt 异常信息。
+ 
+### 新增特性：
+ * 为 Kafka 生产者和消费者提供更多的属性配置。
+
+***
+
+### V1.0
+### 特性：
+ * 配置简单。
+ * 通过 Falcon 可快速实现生产者和消费者相关的数据监控。
+ * 通过钉钉实现 Kafka 服务故障实时报警。
+
 ## 更多信息
 * [Kafka 官方文档](http://kafka.apache.org/documentation/)
 * [NaiveMonitor 项目主页](https://github.com/heimuheimu/naivemonitor)
-* [NaiveAsync v1.0 API Doc](https://heimuheimu.github.io/naiveasync/api/v1.0/)
-* [NaiveAsync v1.0 源码下载](https://heimuheimu.github.io/naiveasync/download/naiveasync-1.0-sources.jar)
-* [NaiveAsync v1.0 Jar包下载](https://heimuheimu.github.io/naiveasync/download/naiveasync-1.0.jar)
+* [NaiveAsync v1.1 API Doc](https://heimuheimu.github.io/naiveasync/api/v1.1/)
+* [NaiveAsync v1.1 源码下载](https://heimuheimu.github.io/naiveasync/download/naiveasync-1.1-sources.jar)
+* [NaiveAsync v1.1 Jar包下载](https://heimuheimu.github.io/naiveasync/download/naiveasync-1.1.jar)
