@@ -222,10 +222,6 @@ public class KafkaConsumerManager implements Closeable {
      */
     private class KafkaConsumeThread extends Thread {
 
-        private final LinkedList<Map<TopicPartition, OffsetAndMetadata>> failedCommitOffsetQueue = new LinkedList<>();
-
-        private final Map<TopicPartition, Long> continuesConsumeFailedCountMap = new HashMap<>();
-
         private final String topic;
 
         private final AsyncMessageConsumer asyncMessageConsumer;
