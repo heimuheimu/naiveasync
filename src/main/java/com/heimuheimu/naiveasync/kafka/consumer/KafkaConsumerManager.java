@@ -392,6 +392,8 @@ public class KafkaConsumerManager implements Closeable {
             if (needCloseConsumer && this.consumer != null) {
                 try {
                     this.consumer.close();
+                } catch (InterruptException ignored) {
+                    //ignored exception
                 } catch (Exception e) {
                     LOGGER.error("KafkaConsumer closed failed. Thread: `" + getName() + "`. Topic: `" + topic + "`.", e);
                 }
