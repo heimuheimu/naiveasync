@@ -401,7 +401,7 @@ public class KafkaConsumerManager implements Closeable {
             }
             hasError = true;
             try {
-                Thread.sleep(sleepSeconds * 1000);
+                Thread.sleep(sleepSeconds * 1000L);
             } catch (InterruptedException ignored) {}
             sleepSeconds *= 2;
             listener.onError(errorMessage, config.getGroupId(), config.getBootstrapServers());
