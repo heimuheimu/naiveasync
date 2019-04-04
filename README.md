@@ -1,5 +1,7 @@
 # NaiveAsync: 对 Kafka 生产者和消费者进行封装，提供实时报警和数据监控功能。
 
+[![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/heimuheimu/naiveasync.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/heimuheimu/naiveasync/context:java)
+
 ## 使用要求
 * JDK 版本：1.8+ 
 * 依赖类库：
