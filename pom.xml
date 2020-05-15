@@ -6,14 +6,26 @@
 
     <groupId>com.heimuheimu</groupId>
     <artifactId>naiveasync</artifactId>
-    <version>1.1</version>
+    <version>1.2-SNAPSHOT</version>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <distributionManagement>
+        <repository>
+            <id>snapshots</id>
+            <url>http://192.168.16.174:7071/nexus/content/repositories/snapshots</url>
+        </repository>
+    </distributionManagement>
 
     <dependencies>
         <!-- Naive monitor Dependence -->
         <dependency>
             <groupId>com.heimuheimu</groupId>
             <artifactId>naivemonitor</artifactId>
-            <version>1.0</version>
+            <version>1.1-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Kafka clients dependence -->
@@ -52,7 +64,7 @@
                     <source>1.8</source>
                     <target>1.8</target>
                     <showWarnings>true</showWarnings>
-                    <encoding>UTF-8</encoding>
+                    <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
             <plugin>
