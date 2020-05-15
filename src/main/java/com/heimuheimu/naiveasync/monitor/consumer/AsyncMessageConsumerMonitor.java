@@ -24,6 +24,8 @@
 
 package com.heimuheimu.naiveasync.monitor.consumer;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -238,6 +240,16 @@ public class AsyncMessageConsumerMonitor {
      */
     public long getExecutionErrorCount() {
         return executionErrorCount.get();
+    }
+
+    /**
+     * 获得消息类型列表，不会返回 {@code null}。
+     *
+     * @return 消息类型列表，不会为 {@code null}
+     * @since 1.2
+     */
+    public Set<String> getMessageTypeSet() {
+        return new HashSet<>(polledCountMap.keySet());
     }
 
     /**

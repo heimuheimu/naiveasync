@@ -24,6 +24,8 @@
 
 package com.heimuheimu.naiveasync.monitor.producer;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -130,6 +132,19 @@ public class AsyncMessageProducerMonitor {
         } else {
             return 0;
         }
+    }
+
+    /**
+     * 获得消息类型列表，不会返回 {@code null}。
+     *
+     * @return 消息类型列表，不会为 {@code null}
+     * @since 1.2
+     */
+    public Set<String> getMessageTypeSet() {
+        Set<String> messageTypeSet = new HashSet<>();
+        messageTypeSet.addAll(successCountMap.keySet());
+        messageTypeSet.addAll(errorCountMap.keySet());
+        return messageTypeSet;
     }
 
     @Override
