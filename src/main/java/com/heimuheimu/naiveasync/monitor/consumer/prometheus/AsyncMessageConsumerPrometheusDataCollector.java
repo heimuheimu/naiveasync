@@ -42,7 +42,7 @@ import java.util.Set;
  *     <li>naiveasync_consumer_success_count{type="$messageType"} 相邻两次采集周期内已消费成功的消息总数</li>
  *     <li>naiveasync_consumer_max_delay_milliseconds{type="$messageType"} 相邻两次采集周期内消息到达最大延迟时间（消息延迟时间 = 消息拉取时间 - 消息发送时间），单位：毫秒</li>
  *     <li>naiveasync_consumer_avg_delay_milliseconds{type="$messageType"} 相邻两次采集周期内消息到达平均延迟时间（消息延迟时间 = 消息拉取时间 - 消息发送时间），单位：毫秒</li>
- *     <li>naiveasync_consumer_exec_error_count 相邻两次采集周期内消费出错次数，包含 Kafka 操作出现的错误和消费过程中出现的错误</li>
+ *     <li>naiveasync_consumer_exec_error_count 相邻两次采集周期内消费出错次数，包含 Kafka 操作出现的错误和消费过程中出现的错误，不区分消息类型</li>
  * </ul>
  *
  * @author heimuheimu
