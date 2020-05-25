@@ -66,6 +66,8 @@ public class AsyncMessageProducerPrometheusDataCollector implements PrometheusCo
                 errorCountData.addSample(PrometheusSample.build(deltaCalculator.delta("error_" + messageType, monitor.getErrorCount(messageType)))
                         .addSampleLabel("type", messageType));
             }
+            dataList.add(successCountData);
+            dataList.add(errorCountData);
         }
         return dataList;
     }
